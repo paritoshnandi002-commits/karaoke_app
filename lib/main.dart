@@ -13,10 +13,28 @@ class KaraokeApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Karaoke',
-      theme: ThemeData.dark(),
+      theme: ThemeData(
+        brightness: Brightness.dark,
+        scaffoldBackgroundColor: const Color(0xFF050018),
+        useMaterial3: true,
+      ),
       home: const HomePage(),
     );
   }
+}
+
+class Song {
+  final String number;
+  final String title;
+  final String artist;
+  final IconData icon;
+
+  const Song({
+    required this.number,
+    required this.title,
+    required this.artist,
+    required this.icon,
+  });
 }
 
 class HomePage extends StatefulWidget {
@@ -27,33 +45,57 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  int selectedNav = 0;
   int selectedCategory = 0;
+  int selectedNav = 0;
 
-  final categories = [
-    ['🔥', 'Popular'],
-    ['♡', 'Love'],
-final List<List<dynamic>> songs = [final List<List<dynamic>> songs = [    ['☆', 'Bengali'],
-    ['♫', 'Hindi'],
-    ['☺', 'Sad'],
-    ['▦', 'More'],
+  final List<String> categories = [
+    '🔥  Popular',
+    '♡  Love',
+    '☆  Bengali',
+    '♫  Hindi',
+    '☹  Sad',
+    '▦  More',
   ];
 
-  final List<List<dynamic>> songs = [
-    ['1', 'Tum Hi Ho', 'Arijit Singh', Icons.favorite],
-    ['2', 'Kesariya', 'Arijit Singh', Icons.nightlight_round],
-    ['3', 'Apna Bana Le', 'Arijit Singh', Icons.music_note],
-    ['4', "Let's Sing Together", 'Music connects hearts', Icons.graphic_eq],
+  final List<Song> songs = const [
+    Song(
+      number: '01',
+      title: 'Tum Hi Ho',
+      artist: 'Arijit Singh',
+      icon: Icons.favorite_rounded,
+    ),
+    Song(
+      number: '02',
+      title: 'Kesariya',
+      artist: 'Arijit Singh',
+      icon: Icons.nightlight_round,
+    ),
+    Song(
+      number: '03',
+      title: 'Apna Bana Le',
+      artist: 'Arijit Singh',
+      icon: Icons.music_note_rounded,
+    ),
+    Song(
+      number: '04',
+      title: 'Let’s Sing Together',
+      artist: 'Music connects hearts',
+      icon: Icons.graphic_eq_rounded,
+    ),
   ];
 
-  void showMessage(String text) {
+  void message(String text) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(text),
+        content: Text(
+          text,
+          style: const TextStyle(fontWeight: FontWeight.w600),
+        ),
         behavior: SnackBarBehavior.floating,
-        backgroundColor: const Color(0xFF171034),
+        margin: const EdgeInsets.all(16),
+        backgroundColor: const Color(0xFF21134D),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(22),
         ),
       ),
     );
@@ -62,26 +104,36 @@ final List<List<dynamic>> songs = [final List<List<dynamic>> songs = [    ['☆'
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF050018),
       extendBody: true,
-
+      backgroundColor: const Color(0xFF050018),
       body: Stack(
         children: [
-          // 🌌 GLOWING BACKGROUND
+          // BACKGROUND GLOW
           Positioned(
-            top: -100,
-            left: -80,
-            child: glow(260, const Color(0xFFFF20C8)),
+            left: -130,
+            top: -120,
+            child: glowCircle(
+              330,
+              const Color(0xFFFF19C8),
+            ),
           ),
+
           Positioned(
-            top: 350,
-            right: -100,
-            child: glow(300, const Color(0xFF493CFF)),
+            right: -140,
+            top: 270,
+            child: glowCircle(
+              360,
+              const Color(0xFF5838FF),
+            ),
           ),
+
           Positioned(
-            bottom: 150,
-            left: -120,
-            child: glow(280, const Color(0xFF00D9FF)),
+            left: -150,
+            bottom: 180,
+            child: glowCircle(
+              300,
+              const Color(0xFF00D9FF),
+            ),
           ),
 
           SafeArea(
@@ -91,20 +143,27 @@ final List<List<dynamic>> songs = [final List<List<dynamic>> songs = [    ['☆'
                 // HEADER
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(22, 18, 22, 12),
+                    padding: const EdgeInsets.fromLTRB(
+                      20,
+                      18,
+                      20,
+                      12,
+                    ),
                     child: Row(
                       children: [
                         ShaderMask(
-                          shaderCallback: (r) => const LinearGradient(
-                            colors: [
-                              Color(0xFFFF55D8),
-                              Color(0xFF8B6CFF),
-                              Color(0xFF35E9FF),
-                            ],
-                          ).createShader(r),
+                          shaderCallback: (bounds) {
+                            return const LinearGradient(
+                              colors: [
+                                Color(0xFFFF43D1),
+                                Color(0xFF8D65FF),
+                                Color(0xFF3BE9FF),
+                              ],
+                            ).createShader(bounds);
+                          },
                           child: const Icon(
-                            Icons.music_note,
-                            size: 54,
+                            Icons.music_note_rounded,
+                            size: 51,
                             color: Colors.white,
                           ),
                         ),
@@ -113,31 +172,31 @@ final List<List<dynamic>> songs = [final List<List<dynamic>> songs = [    ['☆'
 
                         const Expanded(
                           child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                            crossAxisAlignment:
+                                CrossAxisAlignment.start,
                             children: [
                               Text(
                                 'Karaoke',
                                 style: TextStyle(
-                                  fontSize: 39,
-                                  fontWeight: FontWeight.w700,
+                                  fontSize: 36,
+                                  fontWeight: FontWeight.w800,
                                   fontStyle: FontStyle.italic,
-                                  letterSpacing: -1,
+                                  letterSpacing: -1.5,
                                 ),
                               ),
                               Text(
                                 'Sing  •  Feel  •  Be You  ♥',
                                 style: TextStyle(
-                                  color: Colors.white70,
-                                  fontSize: 13,
+                                  color: Colors.white60,
+                                  fontSize: 12,
                                 ),
                               ),
                             ],
                           ),
                         ),
 
-                        glassButton(
+                        roundGlassButton(
                           Icons.notifications_none_rounded,
-                          onTap: () {},
                         ),
 
                         const SizedBox(width: 10),
@@ -149,204 +208,255 @@ final List<List<dynamic>> songs = [final List<List<dynamic>> songs = [    ['☆'
                             shape: BoxShape.circle,
                             gradient: const LinearGradient(
                               colors: [
-                                Color(0xFFFF32D1),
-                                Color(0xFF704CFF),
+                                Color(0xFFFF2ACB),
+                                Color(0xFF714BFF),
                               ],
                             ),
                             border: Border.all(
                               color: Colors.white70,
-                              width: 2,
+                              width: 1.5,
                             ),
                             boxShadow: const [
                               BoxShadow(
-                                color: Color(0xFFFF19D4),
-                                blurRadius: 18,
+                                color: Color(0xFFFF20D0),
+                                blurRadius: 20,
                               ),
                             ],
                           ),
-                          child: const Icon(Icons.person, size: 29),
+                          child: const Icon(
+                            Icons.person_rounded,
+                            size: 27,
+                          ),
                         ),
                       ],
                     ),
                   ),
                 ),
 
-                // HERO
+                // HERO CARD
                 SliverToBoxAdapter(
                   child: Padding(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 18,
                       vertical: 8,
                     ),
-                    child: glossyCard(
-                      height: 300,
-                      child: Stack(
-                        children: [
-                          Positioned(
-                            right: -45,
-                            top: -30,
-                            child: glow(230, const Color(0xFFFF20D5)),
+                    child: Container(
+                      height: 305,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(32),
+                        gradient: const LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            Color(0xFF38215E),
+                            Color(0xFF17133E),
+                            Color(0xFF0C0A29),
+                          ],
+                        ),
+                        border: Border.all(
+                          color: const Color(0xFFFF45D7),
+                          width: 1.2,
+                        ),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Color(0xFF7B20FF),
+                            blurRadius: 30,
+                            spreadRadius: -5,
                           ),
-                          Positioned(
-                            right: 20,
-                            bottom: -50,
-                            child: Container(
-                              width: 250,
-                              height: 250,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                gradient: RadialGradient(
-                                  colors: [
-                                    const Color(0xFFFF27CF)
-                                        .withOpacity(.65),
-                                    Colors.transparent,
+                        ],
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(32),
+                        child: Stack(
+                          children: [
+                            Positioned(
+                              right: -60,
+                              top: -70,
+                              child: glowCircle(
+                                260,
+                                const Color(0xFFFF20D4),
+                              ),
+                            ),
+
+                            Positioned(
+                              right: 28,
+                              bottom: 32,
+                              child: Container(
+                                width: 105,
+                                height: 145,
+                                decoration: BoxDecoration(
+                                  borderRadius:
+                                      BorderRadius.circular(60),
+                                  gradient: const LinearGradient(
+                                    colors: [
+                                      Color(0xFF29234F),
+                                      Color(0xFF08071B),
+                                    ],
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                  ),
+                                  border: Border.all(
+                                    color: const Color(0xFFFF51DC),
+                                    width: 2,
+                                  ),
+                                  boxShadow: const [
+                                    BoxShadow(
+                                      color: Color(0xFFFF20D1),
+                                      blurRadius: 30,
+                                    ),
                                   ],
+                                ),
+                                child: const Icon(
+                                  Icons.mic_rounded,
+                                  size: 68,
+                                  color: Color(0xFFFF75E3),
                                 ),
                               ),
                             ),
-                          ),
 
-                          Padding(
-                            padding: const EdgeInsets.all(25),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Row(
-                                  children: [
-                                    Text(
-                                      '♛',
-                                      style: TextStyle(
-                                        color: Color(0xFFFFD43B),
-                                        fontSize: 25,
+                            Padding(
+                              padding: const EdgeInsets.all(25),
+                              child: Column(
+                                crossAxisAlignment:
+                                    CrossAxisAlignment.start,
+                                children: [
+                                  const Row(
+                                    children: [
+                                      Text(
+                                        '♛',
+                                        style: TextStyle(
+                                          color: Color(0xFFFFD84A),
+                                          fontSize: 25,
+                                        ),
                                       ),
-                                    ),
-                                    SizedBox(width: 8),
-                                    Text(
-                                      'Your Voice',
-                                      style: TextStyle(
-                                        fontSize: 22,
-                                        fontStyle: FontStyle.italic,
-                                        fontWeight: FontWeight.bold,
+                                      SizedBox(width: 8),
+                                      Text(
+                                        'Your Voice',
+                                        style: TextStyle(
+                                          fontSize: 21,
+                                          fontWeight:
+                                              FontWeight.bold,
+                                          fontStyle: FontStyle.italic,
+                                        ),
                                       ),
-                                    ),
-                                  ],
-                                ),
-
-                                ShaderMask(
-                                  shaderCallback: (r) =>
-                                      const LinearGradient(
-                                    colors: [
-                                      Color(0xFFFF70D9),
-                                      Color(0xFFB78CFF),
                                     ],
-                                  ).createShader(r),
-                                  child: const Text(
-                                    'Your Stage ♥',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 37,
-                                      fontWeight: FontWeight.bold,
-                                      fontStyle: FontStyle.italic,
-                                    ),
                                   ),
-                                ),
 
-                                const SizedBox(height: 10),
-
-                                const Text(
-                                  'Sing your favorite songs\n'
-                                  'and connect with people\n'
-                                  'who love music! ♥',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    height: 1.35,
-                                    fontSize: 15,
-                                  ),
-                                ),
-
-                                const Spacer(),
-
-                                GestureDetector(
-                                  onTap: () => showMessage(
-                                    '🎤 Let’s start singing!',
-                                  ),
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 23,
-                                      vertical: 14,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(35),
-                                      gradient: const LinearGradient(
+                                  ShaderMask(
+                                    shaderCallback: (bounds) {
+                                      return const LinearGradient(
                                         colors: [
-                                          Color(0xFFFF27C8),
-                                          Color(0xFF735CFF),
+                                          Color(0xFFFF72D9),
+                                          Color(0xFFBD91FF),
+                                        ],
+                                      ).createShader(bounds);
+                                    },
+                                    child: const Text(
+                                      'Your Stage ♥',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 36,
+                                        fontWeight:
+                                            FontWeight.w900,
+                                        fontStyle: FontStyle.italic,
+                                      ),
+                                    ),
+                                  ),
+
+                                  const SizedBox(height: 9),
+
+                                  const Text(
+                                    'Sing your favorite songs\n'
+                                    'and let your voice shine ✨',
+                                    style: TextStyle(
+                                      color: Colors.white70,
+                                      fontSize: 15,
+                                      height: 1.4,
+                                    ),
+                                  ),
+
+                                  const Spacer(),
+
+                                  GestureDetector(
+                                    onTap: () {
+                                      message(
+                                        '🎤 Let’s start singing!',
+                                      );
+                                    },
+                                    child: Container(
+                                      padding:
+                                          const EdgeInsets.symmetric(
+                                        horizontal: 20,
+                                        vertical: 13,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        borderRadius:
+                                            BorderRadius.circular(30),
+                                        gradient:
+                                            const LinearGradient(
+                                          colors: [
+                                            Color(0xFFFF20C8),
+                                            Color(0xFF714BFF),
+                                          ],
+                                        ),
+                                        boxShadow: const [
+                                          BoxShadow(
+                                            color: Color(0xFFFF19D2),
+                                            blurRadius: 25,
+                                          ),
                                         ],
                                       ),
-                                      boxShadow: const [
-                                        BoxShadow(
-                                          color: Color(0xFFFF19CE),
-                                          blurRadius: 25,
-                                          spreadRadius: 2,
-                                        ),
-                                      ],
-                                    ),
-                                    child: const Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Icon(Icons.mic_rounded),
-                                        SizedBox(width: 10),
-                                        Text(
-                                          'Sing Now',
-                                          style: TextStyle(
-                                            fontSize: 18,
-                                            fontWeight: FontWeight.bold,
+                                      child: const Row(
+                                        mainAxisSize:
+                                            MainAxisSize.min,
+                                        children: [
+                                          Icon(
+                                            Icons.mic_rounded,
+                                            size: 22,
                                           ),
-                                        ),
-                                        SizedBox(width: 12),
-                                        Icon(Icons.arrow_forward_rounded),
-                                      ],
+                                          SizedBox(width: 8),
+                                          Text(
+                                            'Sing Now',
+                                            style: TextStyle(
+                                              fontSize: 17,
+                                              fontWeight:
+                                                  FontWeight.bold,
+                                            ),
+                                          ),
+                                          SizedBox(width: 9),
+                                          Icon(
+                                            Icons
+                                                .arrow_forward_rounded,
+                                            size: 21,
+                                          ),
+                                        ],
+                                      ),
                                     ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-
-                          // MICROPHONE ART
-                          Positioned(
-                            right: 25,
-                            bottom: 40,
-                            child: Container(
-                              width: 105,
-                              height: 145,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(55),
-                                gradient: const LinearGradient(
-                                  colors: [
-                                    Color(0xFF22204A),
-                                    Color(0xFF080719),
-                                  ],
-                                ),
-                                border: Border.all(
-                                  color: Color(0xFFFF4ED8),
-                                  width: 2,
-                                ),
-                                boxShadow: const [
-                                  BoxShadow(
-                                    color: Color(0xFFFF19D4),
-                                    blurRadius: 30,
                                   ),
                                 ],
                               ),
-                              child: const Icon(
-                                Icons.mic_rounded,
-                                size: 70,
-                                color: Color(0xFFFF6DE2),
-                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+
+                // CATEGORY TITLE
+                SliverToBoxAdapter(
+                  child: const Padding(
+                    padding: EdgeInsets.fromLTRB(
+                      21,
+                      13,
+                      21,
+                      3,
+                    ),
+                    child: Text(
+                      'Explore your mood',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
                   ),
@@ -355,82 +465,79 @@ final List<List<dynamic>> songs = [final List<List<dynamic>> songs = [    ['☆'
                 // CATEGORIES
                 SliverToBoxAdapter(
                   child: SizedBox(
-                    height: 125,
+                    height: 105,
                     child: ListView.builder(
                       scrollDirection: Axis.horizontal,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 18,
-                        vertical: 10,
+                      padding: const EdgeInsets.fromLTRB(
+                        18,
+                        10,
+                        18,
+                        8,
                       ),
                       itemCount: categories.length,
                       itemBuilder: (context, index) {
-                        final selected = selectedCategory == index;
+                        final bool selected =
+                            selectedCategory == index;
 
                         return GestureDetector(
                           onTap: () {
-                            setState(() => selectedCategory = index);
-                            showMessage(
-                              '${categories[index][1]} songs selected',
+                            setState(() {
+                              selectedCategory = index;
+                            });
+
+                            message(
+                              '${categories[index]} selected',
                             );
                           },
-                          child: Container(
-                            width: 82,
+                          child: AnimatedContainer(
+                            duration:
+                                const Duration(milliseconds: 220),
                             margin: const EdgeInsets.only(right: 10),
-                            child: Column(
-                              children: [
-                                AnimatedContainer(
-                                  duration: const Duration(milliseconds: 250),
-                                  width: 65,
-                                  height: 65,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    gradient: LinearGradient(
-                                      colors: selected
-                                          ? [
-                                              const Color(0xFFFF2BCB),
-                                              const Color(0xFF724BFF),
-                                            ]
-                                          : [
-                                              const Color(0xFF211548),
-                                              const Color(0xFF10102D),
-                                            ],
+                            padding:
+                                const EdgeInsets.symmetric(
+                              horizontal: 17,
+                              vertical: 12,
+                            ),
+                            decoration: BoxDecoration(
+                              borderRadius:
+                                  BorderRadius.circular(24),
+                              gradient: selected
+                                  ? const LinearGradient(
+                                      colors: [
+                                        Color(0xFFFF22C9),
+                                        Color(0xFF704DFF),
+                                      ],
+                                    )
+                                  : const LinearGradient(
+                                      colors: [
+                                        Color(0xFF211642),
+                                        Color(0xFF11102F),
+                                      ],
                                     ),
-                                    border: Border.all(
-                                      color: selected
-                                          ? const Color(0xFFFF65E0)
-                                          : Colors.white24,
-                                      width: 1.5,
-                                    ),
-                                    boxShadow: selected
-                                        ? const [
-                                            BoxShadow(
-                                              color: Color(0xFFFF21D2),
-                                              blurRadius: 22,
-                                            ),
-                                          ]
-                                        : [],
-                                  ),
-                                  child: Center(
-                                    child: Text(
-                                      categories[index][0],
-                                      style: const TextStyle(fontSize: 29),
-                                    ),
-                                  ),
+                              border: Border.all(
+                                color: selected
+                                    ? const Color(0xFFFF6CE1)
+                                    : Colors.white24,
+                              ),
+                              boxShadow: selected
+                                  ? const [
+                                      BoxShadow(
+                                        color: Color(0xFFFF20D0),
+                                        blurRadius: 18,
+                                      ),
+                                    ]
+                                  : [],
+                            ),
+                            child: Center(
+                              child: Text(
+                                categories[index],
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: selected
+                                      ? FontWeight.bold
+                                      : FontWeight.normal,
                                 ),
-                                const SizedBox(height: 7),
-                                Text(
-                                  categories[index][1],
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: selected
-                                        ? FontWeight.bold
-                                        : FontWeight.normal,
-                                    color: selected
-                                        ? Colors.white
-                                        : Colors.white70,
-                                  ),
-                                ),
-                              ],
+                              ),
                             ),
                           ),
                         );
@@ -439,69 +546,87 @@ final List<List<dynamic>> songs = [final List<List<dynamic>> songs = [    ['☆'
                   ),
                 ),
 
-                // POPULAR TITLE
+                // POPULAR HEADER
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(22, 10, 20, 10),
+                    padding: const EdgeInsets.fromLTRB(
+                      21,
+                      8,
+                      20,
+                      12,
+                    ),
                     child: Row(
                       children: [
                         const Text(
                           '♛',
                           style: TextStyle(
-                            fontSize: 34,
-                            color: Color(0xFFFFD43B),
+                            color: Color(0xFFFFD84A),
+                            fontSize: 30,
                           ),
                         ),
-                        const SizedBox(width: 10),
+                        const SizedBox(width: 8),
                         const Expanded(
                           child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                            crossAxisAlignment:
+                                CrossAxisAlignment.start,
                             children: [
                               Text(
                                 'Popular Songs',
                                 style: TextStyle(
-                                  fontSize: 25,
+                                  fontSize: 24,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
                               Text(
-                                'Top trending songs for you ♥',
+                                'Trending songs for you ♥',
                                 style: TextStyle(
-                                  color: Colors.white60,
-                                  fontSize: 12,
+                                  color: Colors.white54,
+                                  fontSize: 11,
                                 ),
                               ),
                             ],
                           ),
                         ),
-                        TextButton(
-                          onPressed: () => showMessage('Showing all songs'),
-                          child: const Text('See All  ›'),
+                        GestureDetector(
+                          onTap: () {
+                            message('🎵 Showing all songs');
+                          },
+                          child: const Text(
+                            'See All  ›',
+                            style: TextStyle(
+                              color: Color(0xFFFF68DC),
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                         ),
                       ],
                     ),
                   ),
                 ),
 
-                // SONGS
+                // SONG LIST
                 SliverList(
                   delegate: SliverChildBuilderDelegate(
                     (context, index) {
-                      final song = songs[index];
+                      final Song song = songs[index];
 
                       return Padding(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 18,
                           vertical: 5,
                         ),
-                        child: songCard(
-                          number: song[0],
-                          title: song[1],
-                          artist: song[2],
-                          icon: song[3] as IconData,
-                          onPlay: () => showMessage(
-                            '▶ Playing ${song[1]}',
-                          ),
+                        child: SongCard(
+                          song: song,
+                          onPlay: () {
+                            message(
+                              '▶ Playing ${song.title}',
+                            );
+                          },
+                          onLike: () {
+                            message(
+                              '♥ Added ${song.title} to favorites',
+                            );
+                          },
                         ),
                       );
                     },
@@ -516,7 +641,7 @@ final List<List<dynamic>> songs = [final List<List<dynamic>> songs = [    ['☆'
             ),
           ),
 
-          // BOTTOM NAV
+          // GLASS BOTTOM NAV
           Positioned(
             left: 12,
             right: 12,
@@ -524,51 +649,80 @@ final List<List<dynamic>> songs = [final List<List<dynamic>> songs = [    ['☆'
             child: ClipRRect(
               borderRadius: BorderRadius.circular(32),
               child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+                filter: ImageFilter.blur(
+                  sigmaX: 18,
+                  sigmaY: 18,
+                ),
                 child: Container(
-                  height: 76,
+                  height: 78,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF0B0829).withOpacity(.88),
+                    color: const Color(0xFF0D0928)
+                        .withOpacity(0.92),
                     borderRadius: BorderRadius.circular(32),
                     border: Border.all(
-                      color: const Color(0xFFB64CFF).withOpacity(.55),
+                      color: const Color(0xFFB653FF)
+                          .withOpacity(.6),
                     ),
                     boxShadow: const [
                       BoxShadow(
-                        color: Color(0xFF641EFF),
-                        blurRadius: 30,
+                        color: Color(0xFF6420FF),
+                        blurRadius: 28,
                       ),
                     ],
                   ),
                   child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    mainAxisAlignment:
+                        MainAxisAlignment.spaceAround,
                     children: [
-                      navItem(Icons.home_rounded, 'Home', 0),
-                      navItem(Icons.explore_rounded, 'Explore', 1),
+                      NavButton(
+                        icon: Icons.home_rounded,
+                        label: 'Home',
+                        selected: selectedNav == 0,
+                        onTap: () {
+                          setState(() {
+                            selectedNav = 0;
+                          });
+                        },
+                      ),
+                      NavButton(
+                        icon: Icons.explore_rounded,
+                        label: 'Explore',
+                        selected: selectedNav == 1,
+                        onTap: () {
+                          setState(() {
+                            selectedNav = 1;
+                          });
+                          message('🔎 Explore opened');
+                        },
+                      ),
 
-                      // BIG MIC
+                      // CENTER MIC
                       GestureDetector(
-                        onTap: () => showMessage(
-                          '🎤 Microphone opened!',
-                        ),
+                        onTap: () {
+                          message(
+                            '🎤 Microphone opened!',
+                          );
+                        },
                         child: Container(
-                          width: 67,
-                          height: 67,
-                          decoration: BoxDecoration(
+                          width: 66,
+                          height: 66,
+                          decoration: const BoxDecoration(
                             shape: BoxShape.circle,
-                            gradient: const LinearGradient(
+                            gradient: LinearGradient(
                               colors: [
-                                Color(0xFFFF26C9),
-                                Color(0xFF704CFF),
+                                Color(0xFFFF21C9),
+                                Color(0xFF714DFF),
                               ],
                             ),
-                            border: Border.all(
-                              color: Colors.white,
-                              width: 2,
+                            border: Border.fromBorderSide(
+                              BorderSide(
+                                color: Colors.white,
+                                width: 2,
+                              ),
                             ),
-                            boxShadow: const [
+                            boxShadow: [
                               BoxShadow(
-                                color: Color(0xFFFF21D3),
+                                color: Color(0xFFFF20D0),
                                 blurRadius: 25,
                               ),
                             ],
@@ -580,8 +734,28 @@ final List<List<dynamic>> songs = [final List<List<dynamic>> songs = [    ['☆'
                         ),
                       ),
 
-                      navItem(Icons.groups_rounded, 'Room', 2),
-                      navItem(Icons.person_outline_rounded, 'Profile', 3),
+                      NavButton(
+                        icon: Icons.groups_rounded,
+                        label: 'Room',
+                        selected: selectedNav == 2,
+                        onTap: () {
+                          setState(() {
+                            selectedNav = 2;
+                          });
+                          message('👥 Room opened');
+                        },
+                      ),
+                      NavButton(
+                        icon: Icons.person_outline_rounded,
+                        label: 'Profile',
+                        selected: selectedNav == 3,
+                        onTap: () {
+                          setState(() {
+                            selectedNav = 3;
+                          });
+                          message('👤 Profile opened');
+                        },
+                      ),
                     ],
                   ),
                 ),
@@ -592,33 +766,195 @@ final List<List<dynamic>> songs = [final List<List<dynamic>> songs = [    ['☆'
       ),
     );
   }
+}
 
-  Widget navItem(IconData icon, String title, int index) {
-    final selected = selectedNav == index;
+class SongCard extends StatelessWidget {
+  final Song song;
+  final VoidCallback onPlay;
+  final VoidCallback onLike;
 
+  const SongCard({
+    super.key,
+    required this.song,
+    required this.onPlay,
+    required this.onLike,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 92,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(25),
+        gradient: const LinearGradient(
+          colors: [
+            Color(0xFF1B1747),
+            Color(0xFF111A43),
+          ],
+        ),
+        border: Border.all(
+          color: Color(0xFF6655D9),
+          width: 1,
+        ),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0xFF241A70),
+            blurRadius: 15,
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          const SizedBox(width: 8),
+
+          Container(
+            width: 68,
+            height: 68,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(19),
+              gradient: const LinearGradient(
+                colors: [
+                  Color(0xFFFF35C9),
+                  Color(0xFF4C42FF),
+                ],
+              ),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0xFF8B2DFF),
+                  blurRadius: 14,
+                ),
+              ],
+            ),
+            child: Icon(
+              song.icon,
+              size: 32,
+            ),
+          ),
+
+          const SizedBox(width: 12),
+
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment:
+                  CrossAxisAlignment.start,
+              children: [
+                Text(
+                  song.title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  song.artist,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Colors.white54,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          GestureDetector(
+            onTap: onPlay,
+            child: Container(
+              width: 47,
+              height: 47,
+              decoration: const BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: LinearGradient(
+                  colors: [
+                    Color(0xFFFF20C9),
+                    Color(0xFF684DFF),
+                  ],
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Color(0xFFFF20D0),
+                    blurRadius: 17,
+                  ),
+                ],
+              ),
+              child: const Icon(
+                Icons.play_arrow_rounded,
+                size: 29,
+              ),
+            ),
+          ),
+
+          const SizedBox(width: 10),
+
+          GestureDetector(
+            onTap: onLike,
+            child: const Icon(
+              Icons.favorite_border_rounded,
+              color: Colors.white70,
+              size: 24,
+            ),
+          ),
+
+          const SizedBox(width: 12),
+
+          const Icon(
+            Icons.more_vert_rounded,
+            color: Colors.white54,
+            size: 23,
+          ),
+
+          const SizedBox(width: 10),
+        ],
+      ),
+    );
+  }
+}
+
+class NavButton extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const NavButton({
+    super.key,
+    required this.icon,
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () {
-        setState(() => selectedNav = index);
-        showMessage('$title opened');
-      },
+      onTap: onTap,
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisAlignment:
+            MainAxisAlignment.center,
         children: [
           Icon(
             icon,
             size: 27,
             color: selected
-                ? const Color(0xFFFF4EDB)
+                ? const Color(0xFFFF54DA)
                 : Colors.white70,
           ),
           const SizedBox(height: 3),
           Text(
-            title,
+            label,
             style: TextStyle(
-              fontSize: 11,
+              fontSize: 10,
               color: selected
-                  ? const Color(0xFFFF4EDB)
-                  : Colors.white70,
+                  ? const Color(0xFFFF54DA)
+                  : Colors.white60,
+              fontWeight: selected
+                  ? FontWeight.bold
+                  : FontWeight.normal,
             ),
           ),
         ],
@@ -627,168 +963,7 @@ final List<List<dynamic>> songs = [final List<List<dynamic>> songs = [    ['☆'
   }
 }
 
-// GLOSSY CARD
-Widget glossyCard({
-  required double height,
-  required Widget child,
-}) {
-  return Container(
-    height: height,
-    decoration: BoxDecoration(
-      borderRadius: BorderRadius.circular(30),
-      gradient: LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        colors: [
-          const Color(0xFF30205D).withOpacity(.9),
-          const Color(0xFF11113C).withOpacity(.92),
-          const Color(0xFF160A35).withOpacity(.95),
-        ],
-      ),
-      border: Border.all(
-        color: const Color(0xFFFF42D5).withOpacity(.7),
-        width: 1.5,
-      ),
-      boxShadow: const [
-        BoxShadow(
-          color: Color(0xFF8D21FF),
-          blurRadius: 25,
-          spreadRadius: -5,
-        ),
-      ],
-    ),
-    child: ClipRRect(
-      borderRadius: BorderRadius.circular(30),
-      child: child,
-    ),
-  );
-}
-
-// SONG CARD
-Widget songCard({
-  required String number,
-  required String title,
-  required String artist,
-  required IconData icon,
-  required VoidCallback onPlay,
-}) {
-  return Container(
-    height: 92,
-    decoration: BoxDecoration(
-      borderRadius: BorderRadius.circular(25),
-      gradient: const LinearGradient(
-        colors: [
-          Color(0xFF171642),
-          Color(0xFF101D4C),
-        ],
-      ),
-      border: Border.all(
-        color: const Color(0xFF6755D9).withOpacity(.65),
-      ),
-      boxShadow: const [
-        BoxShadow(
-          color: Color(0xFF241C70),
-          blurRadius: 15,
-        ),
-      ],
-    ),
-    child: Row(
-      children: [
-        const SizedBox(width: 8),
-
-        Container(
-          width: 68,
-          height: 68,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(18),
-            gradient: const LinearGradient(
-              colors: [
-                Color(0xFFFF39C8),
-                Color(0xFF4C3CFF),
-              ],
-            ),
-          ),
-          child: Icon(
-            icon,
-            size: 34,
-            color: Colors.white,
-          ),
-        ),
-
-        const SizedBox(width: 13),
-
-        Expanded(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 17,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 3),
-              Text(
-                artist,
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: Colors.white60,
-                ),
-              ),
-            ],
-          ),
-        ),
-
-        GestureDetector(
-          onTap: onPlay,
-          child: Container(
-            width: 49,
-            height: 49,
-            decoration: const BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: LinearGradient(
-                colors: [
-                  Color(0xFFFF1FCB),
-                  Color(0xFF694CFF),
-                ],
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Color(0xFFFF20D0),
-                  blurRadius: 18,
-                ),
-              ],
-            ),
-            child: const Icon(
-              Icons.play_arrow_rounded,
-              size: 31,
-            ),
-          ),
-        ),
-
-        const SizedBox(width: 12),
-
-        const Icon(
-          Icons.favorite_border_rounded,
-          color: Colors.white70,
-        ),
-
-        const SizedBox(width: 12),
-
-        const Icon(
-          Icons.more_vert_rounded,
-          color: Colors.white70,
-        ),
-
-        const SizedBox(width: 10),
-      ],
-    ),
-  );
-}
-
-Widget glow(double size, Color color) {
+Widget glowCircle(double size, Color color) {
   return Container(
     width: size,
     height: size,
@@ -796,8 +971,8 @@ Widget glow(double size, Color color) {
       shape: BoxShape.circle,
       gradient: RadialGradient(
         colors: [
-          color.withOpacity(.45),
-          color.withOpacity(.08),
+          color.withOpacity(.42),
+          color.withOpacity(.10),
           Colors.transparent,
         ],
       ),
@@ -805,27 +980,26 @@ Widget glow(double size, Color color) {
   );
 }
 
-Widget glassButton(
-  IconData icon, {
-  required VoidCallback onTap,
-}) {
-  return GestureDetector(
-    onTap: onTap,
-    child: Container(
-      width: 48,
-      height: 48,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: Colors.white.withOpacity(.08),
-        border: Border.all(color: Colors.white24),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0xFF8D29FF),
-            blurRadius: 15,
-          ),
-        ],
+Widget roundGlassButton(IconData icon) {
+  return Container(
+    width: 48,
+    height: 48,
+    decoration: BoxDecoration(
+      shape: BoxShape.circle,
+      color: Colors.white.withOpacity(.07),
+      border: Border.all(
+        color: Colors.white24,
       ),
-      child: Icon(icon, size: 27),
+      boxShadow: const [
+        BoxShadow(
+          color: Color(0xFF722BFF),
+          blurRadius: 14,
+        ),
+      ],
+    ),
+    child: Icon(
+      icon,
+      size: 26,
     ),
   );
 }
