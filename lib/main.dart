@@ -1,13 +1,10 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-
 void main() {
   runApp(const KaraokeApp());
 }
-
 class KaraokeApp extends StatelessWidget {
   const KaraokeApp({super.key});
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -23,15 +20,12 @@ class KaraokeApp extends StatelessWidget {
     );
   }
 }
-
 class Song {
   final String title;
   final String artist;
   final String emoji;
-
   const Song(this.title, this.artist, this.emoji);
 }
-
 const songs = <Song>[
   Song('Kesariya', 'Arijit Singh', '🎵'),
   Song('Tum Hi Ho', 'Arijit Singh', '❤️'),
@@ -40,24 +34,19 @@ const songs = <Song>[
   Song('Chaleya', 'Arijit Singh', '💜'),
   Song('Tujhe Kitna Chahne Lage', 'Arijit Singh', '🎤'),
 ];
-
 class MainShell extends StatefulWidget {
   const MainShell({super.key});
-
   @override
   State<MainShell> createState() => _MainShellState();
 }
-
 class _MainShellState extends State<MainShell> {
   int index = 0;
-
   final pages = const [
     HomePage(),
     ExplorePage(),
     RoomPage(),
     ProfilePage(),
   ];
-
   void openStudio() {
     Navigator.push(
       context,
@@ -66,7 +55,6 @@ class _MainShellState extends State<MainShell> {
       ),
     );
   }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -123,10 +111,8 @@ class _MainShellState extends State<MainShell> {
       ),
     );
   }
-
   Widget navItem(IconData icon, String text, int itemIndex) {
     final selected = index == itemIndex;
-
     return GestureDetector(
       onTap: () {
         setState(() {
@@ -161,12 +147,9 @@ class _MainShellState extends State<MainShell> {
     );
   }
 }
-
 // ================= HOME =================
-
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
-
   @override
   Widget build(BuildContext context) {
     return AppBackground(
@@ -214,9 +197,7 @@ class HomePage extends StatelessWidget {
                   circleButton(Icons.settings_rounded),
                 ],
               ),
-
               const SizedBox(height: 25),
-
               // HERO
               GestureDetector(
                 onTap: () {
@@ -312,13 +293,9 @@ class HomePage extends StatelessWidget {
                   ),
                 ),
               ),
-
               const SizedBox(height: 28),
-
               sectionTitle('Categories', 'See all'),
-
               const SizedBox(height: 14),
-
               SizedBox(
                 height: 48,
                 child: ListView(
@@ -333,13 +310,9 @@ class HomePage extends StatelessWidget {
                   ],
                 ),
               ),
-
               const SizedBox(height: 28),
-
               sectionTitle('Popular Songs', 'View all'),
-
               const SizedBox(height: 14),
-
               ...songs.take(4).map(
                     (song) => Padding(
                       padding:
@@ -354,19 +327,14 @@ class HomePage extends StatelessWidget {
     );
   }
 }
-
 // ================= EXPLORE =================
-
 class ExplorePage extends StatefulWidget {
   const ExplorePage({super.key});
-
   @override
   State<ExplorePage> createState() => _ExplorePageState();
 }
-
 class _ExplorePageState extends State<ExplorePage> {
   String query = '';
-
   @override
   Widget build(BuildContext context) {
     final filtered = songs.where((song) {
@@ -374,7 +342,6 @@ class _ExplorePageState extends State<ExplorePage> {
           '${song.title} ${song.artist}'.toLowerCase();
       return text.contains(query.toLowerCase());
     }).toList();
-
     return AppBackground(
       child: SafeArea(
         child: Padding(
@@ -431,18 +398,14 @@ class _ExplorePageState extends State<ExplorePage> {
     );
   }
 }
-
 // ================= ROOM =================
-
 class RoomPage extends StatelessWidget {
   const RoomPage({super.key});
-
   void message(BuildContext context, String text) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(text)),
     );
   }
-
   @override
   Widget build(BuildContext context) {
     return AppBackground(
@@ -466,7 +429,6 @@ class RoomPage extends StatelessWidget {
                 style: TextStyle(color: Colors.white60),
               ),
               const SizedBox(height: 24),
-
               GlassCard(
                 child: Row(
                   children: [
@@ -523,9 +485,7 @@ class RoomPage extends StatelessWidget {
                   ],
                 ),
               ),
-
               const SizedBox(height: 20),
-
               const Text(
                 'Live Rooms',
                 style: TextStyle(
@@ -533,9 +493,7 @@ class RoomPage extends StatelessWidget {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-
               const SizedBox(height: 14),
-
               roomCard(
                 context,
                 'Midnight Singers',
@@ -560,7 +518,6 @@ class RoomPage extends StatelessWidget {
       ),
     );
   }
-
   Widget roomCard(
     BuildContext context,
     String title,
@@ -610,12 +567,9 @@ class RoomPage extends StatelessWidget {
     );
   }
 }
-
 // ================= PROFILE =================
-
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
-
   @override
   Widget build(BuildContext context) {
     return AppBackground(
@@ -645,9 +599,7 @@ class ProfilePage extends StatelessWidget {
                 '@singer',
                 style: TextStyle(color: Colors.white54),
               ),
-
               const SizedBox(height: 25),
-
               GlassCard(
                 child: Row(
                   mainAxisAlignment:
@@ -659,9 +611,7 @@ class ProfilePage extends StatelessWidget {
                   ],
                 ),
               ),
-
               const SizedBox(height: 20),
-
               optionTile(
                 context,
                 Icons.favorite_rounded,
@@ -709,7 +659,6 @@ class ProfilePage extends StatelessWidget {
       ),
     );
   }
-
   Widget profileStat(String number, String label) {
     return Column(
       children: [
@@ -731,7 +680,6 @@ class ProfilePage extends StatelessWidget {
       ],
     );
   }
-
   Widget optionTile(
     BuildContext context,
     IconData icon,
@@ -774,25 +722,19 @@ class ProfilePage extends StatelessWidget {
     );
   }
 }
-
 // ================= STUDIO =================
-
 class KaraokeStudioPage extends StatefulWidget {
   const KaraokeStudioPage({super.key});
-
   @override
   State<KaraokeStudioPage> createState() =>
       _KaraokeStudioPageState();
 }
-
 class _KaraokeStudioPageState
     extends State<KaraokeStudioPage> {
   bool playing = false;
   bool favorite = false;
   double progress = .35;
-
   Song selectedSong = songs[0];
-
   @override
   Widget build(BuildContext context) {
     return AppBackground(
@@ -839,9 +781,7 @@ class _KaraokeStudioPageState
                 ],
               ),
             ),
-
             const Spacer(),
-
             Container(
               width: 245,
               height: 245,
@@ -882,9 +822,7 @@ class _KaraokeStudioPageState
                 ),
               ),
             ),
-
             const SizedBox(height: 35),
-
             Text(
               selectedSong.title,
               style: const TextStyle(
@@ -899,9 +837,7 @@ class _KaraokeStudioPageState
                 color: Colors.white54,
               ),
             ),
-
             const SizedBox(height: 30),
-
             Padding(
               padding:
                   const EdgeInsets.symmetric(horizontal: 25),
@@ -914,7 +850,6 @@ class _KaraokeStudioPageState
                 },
               ),
             ),
-
             Padding(
               padding:
                   const EdgeInsets.symmetric(horizontal: 35),
@@ -933,9 +868,7 @@ class _KaraokeStudioPageState
                 ],
               ),
             ),
-
             const SizedBox(height: 20),
-
             Row(
               mainAxisAlignment:
                   MainAxisAlignment.center,
@@ -984,9 +917,7 @@ class _KaraokeStudioPageState
                 ),
               ],
             ),
-
             const Spacer(),
-
             Padding(
               padding:
                   const EdgeInsets.fromLTRB(18, 8, 18, 25),
@@ -1025,21 +956,16 @@ class _KaraokeStudioPageState
     );
   }
 }
-
 // ================= SETTINGS =================
-
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
-
   @override
   State<SettingsPage> createState() =>
       _SettingsPageState();
 }
-
 class _SettingsPageState extends State<SettingsPage> {
   bool notifications = true;
   bool darkMode = true;
-
   @override
   Widget build(BuildContext context) {
     return AppBackground(
@@ -1070,9 +996,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
               ],
             ),
-
             const SizedBox(height: 20),
-
             GlassCard(
               child: Column(
                 children: [
@@ -1103,9 +1027,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 ],
               ),
             ),
-
             const SizedBox(height: 15),
-
             GlassCard(
               child: Column(
                 children: [
@@ -1129,7 +1051,6 @@ class _SettingsPageState extends State<SettingsPage> {
       ),
     );
   }
-
   Widget settingsButton(IconData icon, String title) {
     return ListTile(
       contentPadding: EdgeInsets.zero,
@@ -1148,17 +1069,13 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 }
-
 // ================= REUSABLE WIDGETS =================
-
 class AppBackground extends StatelessWidget {
   final Widget child;
-
   const AppBackground({
     super.key,
     required this.child,
   });
-
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -1196,7 +1113,6 @@ class AppBackground extends StatelessWidget {
       ),
     );
   }
-
   Widget glowCircle(Color color, double size) {
     return ImageFiltered(
       imageFilter: ImageFilter.blur(
@@ -1214,25 +1130,22 @@ class AppBackground extends StatelessWidget {
     );
   }
 }
-
 class GlassCard extends StatelessWidget {
   final Widget child;
   final EdgeInsetsGeometry padding;
   final double radius;
-
   const GlassCard({
     super.key,
     required this.child,
     this.padding = const EdgeInsets.all(16),
     this.radius = 22,
   });
-
   @override
   Widget build(BuildContext context) {
     return ClipRRect(
       borderRadius: BorderRadius.circular(radius),
       child: BackdropFilter(
-        imageFilter: ImageFilter.blur(
+        Filter: ImageFilter.blur(
           sigmaX: 15,
           sigmaY: 15,
         ),
@@ -1251,17 +1164,14 @@ class GlassCard extends StatelessWidget {
     );
   }
 }
-
 class CategoryChip extends StatelessWidget {
   final String emoji;
   final String title;
-
   const CategoryChip(
     this.emoji,
     this.title, {
     super.key,
   });
-
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -1292,15 +1202,12 @@ class CategoryChip extends StatelessWidget {
     );
   }
 }
-
 class SongCard extends StatelessWidget {
   final Song song;
-
   const SongCard({
     super.key,
     required this.song,
   });
-
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -1380,7 +1287,6 @@ class SongCard extends StatelessWidget {
     );
   }
 }
-
 Widget sectionTitle(String title, String action) {
   return Row(
     children: [
@@ -1402,7 +1308,6 @@ Widget sectionTitle(String title, String action) {
     ],
   );
 }
-
 Widget circleButton(IconData icon) {
   return Container(
     width: 42,
@@ -1421,7 +1326,6 @@ Widget circleButton(IconData icon) {
     ),
   );
 }
-
 void showMessage(BuildContext context, String text) {
   ScaffoldMessenger.of(context).showSnackBar(
     SnackBar(
