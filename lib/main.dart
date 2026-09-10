@@ -1,3 +1,5 @@
+
+import 'dart:async';
 import 'package:flutter/material.dart';
 
 void main() {
@@ -12,1415 +14,407 @@ class KaraokeApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Karaoke',
-      theme: ThemeData(
-        useMaterial3: true,
-        brightness: Brightness.dark,
-        scaffoldBackgroundColor: const Color(0xFF08051C),
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFFFF4FD8),
-          brightness: Brightness.dark,
-        ),
-      ),
-      home: const MainShell(),
+      theme: ThemeData.dark(useMaterial3: true),
+      home: const KaraokeShell(),
     );
   }
 }
 
-// =====================================================
-// SONG MODEL
-// =====================================================
-
-class Song {
-  final String title;
-  final String artist;
-  final IconData icon;
-
-  const Song({
-    required this.title,
-    required this.artist,
-    required this.icon,
-  });
+enum KaraokeScreen {
+  splash,
+  home,
+  explore,
+  player,
+  profile,
+  room,
+  settings,
+  ending,
 }
 
-final List<Song> songs = [
-  const Song(
-    title: 'Perfect',
-    artist: 'Ed Sheeran',
-    icon: Icons.music_note_rounded,
-  ),
-  const Song(
-    title: 'Kesariya',
-    artist: 'Arijit Singh',
-    icon: Icons.favorite_rounded,
-  ),
-  const Song(
-    title: 'Tum Hi Ho',
-    artist: 'Arijit Singh',
-    icon: Icons.mic_rounded,
-  ),
-  const Song(
-    title: 'Apna Bana Le',
-    artist: 'Arijit Singh',
-    icon: Icons.headphones_rounded,
-  ),
-  const Song(
-    title: 'Heeriye',
-    artist: 'Jasleen Royal',
-    icon: Icons.graphic_eq_rounded,
-  ),
-  const Song(
-    title: 'Chaleya',
-    artist: 'Arijit Singh',
-    icon: Icons.music_note_rounded,
-  ),
-];
-
-// =====================================================
-// MAIN SHELL
-// =====================================================
-
-class MainShell extends StatefulWidget {
-  const MainShell({super.key});
+class KaraokeShell extends StatefulWidget {
+  const KaraokeShell({super.key});
 
   @override
-  State<MainShell> createState() => _MainShellState();
+  State<KaraokeShell> createState() => _KaraokeShellState();
 }
 
-class _MainShellState extends State<MainShell> {
-  int selectedIndex = 0;
+class _KaraokeShellState extends State<KaraokeShell> {
+  KaraokeScreen screen = KaraokeScreen.splash;
+  KaraokeScreen previous = KaraokeScreen.home;
+  bool notifications = true;
+  bool darkMode = true;
+  bool playing = false;
+  bool favorite = false;
+  bool loggedOut = false;
 
-  final List<Widget> pages = const [
-    HomePage(),
-    ExplorePage(),
-    RoomsPage(),
-    ProfilePage(),
-  ];
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _timer = Timer(const Duration(milliseconds: 1700), () {
+      if (mounted) {
+        setState(() => screen = KaraokeScreen.home);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  void go(KaraokeScreen next) {
+    if (next == screen) return;
+    if (screen != KaraokeScreen.splash) previous = screen;
+    setState(() => screen = next);
+  }
+
+  void back() {
+    setState(() => screen = previous == KaraokeScreen.player
+        ? KaraokeScreen.home
+        : previous);
+  }
+
+  void handleTap(TapUpDetails details, Size size) {
+    final x = details.localPosition.dx / size.width;
+    final y = details.localPosition.dy / size.height;
+
+    if (screen == KaraokeScreen.splash) return;
+
+    // Bottom navigation: Home, Explore, Mic, Room, Profile.
+    if (y > .875) {
+      if (x < .20) {
+        go(KaraokeScreen.home);
+        return;
+      }
+      if (x < .40) {
+        go(KaraokeScreen.explore);
+        return;
+      }
+      if (x < .60) {
+        previous = screen;
+        go(KaraokeScreen.player);
+        return;
+      }
+      if (x < .80) {
+        go(KaraokeScreen.room);
+        return;
+      }
+      go(KaraokeScreen.profile);
+      return;
+    }
+
+    switch (screen) {
+      case KaraokeScreen.home:
+        if (y < .38 && y > .12) {
+          previous = KaraokeScreen.home;
+          go(KaraokeScreen.player);
+        } else if (y > .49 && y < .86) {
+          previous = KaraokeScreen.home;
+          go(KaraokeScreen.player);
+        }
+        break;
+
+      case KaraokeScreen.explore:
+        if (y > .38 && y < .88) {
+          previous = KaraokeScreen.explore;
+          go(KaraokeScreen.player);
+        }
+        break;
+
+      case KaraokeScreen.player:
+        if (x < .16 && y < .12) {
+          back();
+        } else if (y > .38 && y < .57) {
+          setState(() => playing = !playing);
+        } else if (x > .82 && y < .16) {
+          setState(() => favorite = !favorite);
+        } else if (y > .82 && x > .70) {
+          _showKaraokeDialog();
+        }
+        break;
+
+      case KaraokeScreen.profile:
+        if (x > .82 && y < .13) {
+          go(KaraokeScreen.settings);
+        } else if (y > .78 && y < .88) {
+          go(KaraokeScreen.settings);
+        } else if (y > .43 && y < .60) {
+          go(KaraokeScreen.room);
+        }
+        break;
+
+      case KaraokeScreen.room:
+        if (y > .08 && y < .19 && x > .52) {
+          _showCreateRoomDialog();
+        } else if (y > .22 && y < .42) {
+          _showJoinDialog();
+        } else if (y > .42 && y < .88) {
+          _showJoinDialog();
+        }
+        break;
+
+      case KaraokeScreen.settings:
+        if (y > .17 && y < .25) {
+          _showSimpleDialog('Account & Security', 'Your account is protected.');
+        } else if (y > .25 && y < .33) {
+          setState(() => notifications = !notifications);
+        } else if (y > .33 && y < .42) {
+          setState(() => darkMode = !darkMode);
+        } else if (y > .42 && y < .50) {
+          _showSimpleDialog('Language', 'English');
+        } else if (y > .50 && y < .58) {
+          _showSimpleDialog('Privacy Policy', 'Your privacy matters.');
+        } else if (y > .58 && y < .66) {
+          _showSimpleDialog('Help & Support', 'Karaoke support is ready.');
+        } else if (y > .66 && y < .74) {
+          _showSimpleDialog('About App', 'Karaoke • Version 1.0.0');
+        } else if (y > .80 && y < .91) {
+          setState(() => loggedOut = true);
+          go(KaraokeScreen.home);
+        } else if (x < .18 && y < .13) {
+          back();
+        }
+        break;
+
+      case KaraokeScreen.ending:
+        go(KaraokeScreen.home);
+        break;
+
+      case KaraokeScreen.splash:
+        break;
+    }
+  }
+
+  void _showKaraokeDialog() {
+    showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF10133B),
+        title: const Text('Karaoke'),
+        content: const Text('Microphone mode is ready. You can start singing here.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Start'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showJoinDialog() {
+    showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF10133B),
+        title: const Text('Join Room'),
+        content: const Text('You joined the selected live room.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showCreateRoomDialog() {
+    final controller = TextEditingController();
+    showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF10133B),
+        title: const Text('Create Room'),
+        content: TextField(
+          controller: controller,
+          style: const TextStyle(color: Colors.white),
+          decoration: const InputDecoration(
+            hintText: 'Room name',
+            hintStyle: TextStyle(color: Colors.white54),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () {
+              Navigator.pop(context);
+              ScaffoldMessenger.of(this.context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    controller.text.trim().isEmpty
+                        ? 'Room created'
+                        : 'Room "${controller.text.trim()}" created',
+                  ),
+                ),
+              );
+            },
+            child: const Text('Create'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showSimpleDialog(String title, String message) {
+    showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF10133B),
+        title: Text(title),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String assetFor(KaraokeScreen value) {
+    switch (value) {
+      case KaraokeScreen.splash:
+        return 'assets/screens/splash.png';
+      case KaraokeScreen.home:
+        return 'assets/screens/home.png';
+      case KaraokeScreen.explore:
+        return 'assets/screens/explore.png';
+      case KaraokeScreen.player:
+        return 'assets/screens/player.png';
+      case KaraokeScreen.profile:
+        return 'assets/screens/profile.png';
+      case KaraokeScreen.room:
+        return 'assets/screens/room.png';
+      case KaraokeScreen.settings:
+        return 'assets/screens/settings.png';
+      case KaraokeScreen.ending:
+        return 'assets/screens/ending.png';
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      extendBody: true,
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Color(0xFF08051C),
-              Color(0xFF17092E),
-              Color(0xFF08051C),
-            ],
-          ),
-        ),
-        child: SafeArea(
-          bottom: false,
-          child: pages[selectedIndex],
-        ),
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: selectedIndex,
-        type: BottomNavigationBarType.fixed,
-        backgroundColor: const Color(0xFF110A2B),
-        selectedItemColor: const Color(0xFFFF4FD8),
-        unselectedItemColor: Colors.white54,
-        onTap: (index) {
-          setState(() {
-            selectedIndex = index;
-          });
-        },
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home_rounded),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.explore_rounded),
-            label: 'Explore',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.groups_rounded),
-            label: 'Rooms',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person_rounded),
-            label: 'Profile',
-          ),
-        ],
-      ),
-    );
-  }
-}
+      backgroundColor: Colors.black,
+      body: SafeArea(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final screenSize = Size(
+              constraints.maxWidth,
+              constraints.maxHeight,
+            );
 
-// =====================================================
-// HOME
-// =====================================================
+            return GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTapUp: (details) => handleTap(details, screenSize),
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  Image.asset(
+                    assetFor(screen),
+                    fit: BoxFit.cover,
+                    filterQuality: FilterQuality.high,
+                  ),
 
-class HomePage extends StatelessWidget {
-  const HomePage({super.key});
+                  // Invisible interaction helpers: the reference artwork stays
+                  // visually unchanged while the important options remain live.
+                  if (screen != KaraokeScreen.splash &&
+                      screen != KaraokeScreen.ending)
+                    IgnorePointer(
+                      child: Container(color: Colors.transparent),
+                    ),
 
-  @override
-  Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(20, 18, 20, 110),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const HomeHeader(),
-          const SizedBox(height: 22),
-          const HeroCard(),
-          const SizedBox(height: 28),
-          const SectionTitle(
-            title: 'Choose your vibe',
-            subtitle: 'Find your perfect karaoke mood',
-          ),
-          const SizedBox(height: 14),
-          const CategoryRow(),
-          const SizedBox(height: 28),
-          SectionTitle(
-            title: 'Popular songs',
-            subtitle: 'Sing what everyone loves',
-            action: 'See all',
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const AllSongsPage(),
-                ),
-              );
-            },
-          ),
-          const SizedBox(height: 14),
-          ...songs.take(4).map(
-                (song) => Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: SongCard(song: song),
-                ),
-              ),
-        ],
-      ),
-    );
-  }
-}
+                  // Live visual state for play/favourite/settings.
+                  if (screen == KaraokeScreen.player && playing)
+                    const Positioned(
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      child: SizedBox(height: 1),
+                    ),
 
-// =====================================================
-// HOME HEADER
-// =====================================================
+                  if (screen == KaraokeScreen.settings)
+                    Positioned(
+                      right: 18,
+                      top: constraints.maxHeight * .34,
+                      child: IgnorePointer(
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          width: 36,
+                          height: 20,
+                          decoration: BoxDecoration(
+                            color: darkMode
+                                ? const Color(0xFF3D8DFF)
+                                : const Color(0xFF555555),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Align(
+                            alignment: darkMode
+                                ? Alignment.centerRight
+                                : Alignment.centerLeft,
+                            child: Container(
+                              margin: const EdgeInsets.all(3),
+                              width: 14,
+                              height: 14,
+                              decoration: const BoxDecoration(
+                                color: Colors.white,
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
 
-class HomeHeader extends StatelessWidget {
-  const HomeHeader({super.key});
+                  if (screen == KaraokeScreen.settings && !notifications)
+                    const Positioned(
+                      right: 20,
+                      top: 10,
+                      child: SizedBox.shrink(),
+                    ),
 
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Container(
-          width: 50,
-          height: 50,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            gradient: const LinearGradient(
-              colors: [
-                Color(0xFFFF4FCF),
-                Color(0xFF704CFF),
-              ],
-            ),
-          ),
-          child: const Icon(
-            Icons.mic_rounded,
-            size: 28,
-          ),
-        ),
-        const SizedBox(width: 12),
-        const Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Welcome back 👋',
-                style: TextStyle(
-                  color: Colors.white54,
-                  fontSize: 13,
-                ),
-              ),
-              SizedBox(height: 3),
-              Text(
-                'Ready to sing?',
-                style: TextStyle(
-                  fontSize: 21,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-        ),
-        IconButton(
-          onPressed: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('No new notifications'),
+                  if (screen == KaraokeScreen.player && favorite)
+                    const Positioned(
+                      right: 26,
+                      top: 48,
+                      child: IgnorePointer(
+                        child: Icon(
+                          Icons.favorite,
+                          color: Color(0xFFFF4FD8),
+                          size: 18,
+                        ),
+                      ),
+                    ),
+
+                  if (loggedOut)
+                    const Positioned(
+                      left: 0,
+                      right: 0,
+                      bottom: 8,
+                      child: IgnorePointer(
+                        child: Text(
+                          'Welcome back',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Colors.white70,
+                            fontSize: 10,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
               ),
             );
           },
-          icon: const Icon(
-            Icons.notifications_none_rounded,
-          ),
         ),
-      ],
-    );
-  }
-}
-
-// =====================================================
-// HERO CARD
-// =====================================================
-
-class HeroCard extends StatelessWidget {
-  const HeroCard({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(23),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(28),
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Color(0xFFB82BFF),
-            Color(0xFF6A35FF),
-            Color(0xFF30209D),
-          ],
-        ),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x555C27FF),
-            blurRadius: 28,
-            spreadRadius: 2,
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 11,
-              vertical: 6,
-            ),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.15),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: const Text(
-              '🔥 TRENDING NOW',
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-          const SizedBox(height: 18),
-          const Text(
-            'Your voice.\nYour stage.',
-            style: TextStyle(
-              fontSize: 30,
-              height: 1.05,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-          const SizedBox(height: 10),
-          const Text(
-            'Sing your favourite songs and\nmake every moment memorable.',
-            style: TextStyle(
-              color: Colors.white70,
-              height: 1.4,
-            ),
-          ),
-          const SizedBox(height: 20),
-          ElevatedButton.icon(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => KaraokeStudioPage(
-                    song: songs[0],
-                  ),
-                ),
-              );
-            },
-            icon: const Icon(Icons.mic_rounded),
-            label: const Text('Start singing'),
-            style: ElevatedButton.styleFrom(
-              foregroundColor: const Color(0xFF42105B),
-              backgroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(
-                horizontal: 20,
-                vertical: 13,
-              ),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(18),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// =====================================================
-// SECTION TITLE
-// =====================================================
-
-class SectionTitle extends StatelessWidget {
-  final String title;
-  final String subtitle;
-  final String? action;
-  final VoidCallback? onTap;
-
-  const SectionTitle({
-    super.key,
-    required this.title,
-    required this.subtitle,
-    this.action,
-    this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                subtitle,
-                style: const TextStyle(
-                  color: Colors.white54,
-                  fontSize: 12,
-                ),
-              ),
-            ],
-          ),
-        ),
-        if (action != null)
-          TextButton(
-            onPressed: onTap,
-            child: Text(
-              action!,
-              style: const TextStyle(
-                color: Color(0xFFFF55D8),
-              ),
-            ),
-          ),
-      ],
-    );
-  }
-}
-
-// =====================================================
-// CATEGORY
-// =====================================================
-
-class CategoryRow extends StatelessWidget {
-  const CategoryRow({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    const categories = [
-      ['🔥', 'Trending'],
-      ['💖', 'Love'],
-      ['🎧', 'Chill'],
-      ['⚡', 'Party'],
-    ];
-
-    return SizedBox(
-      height: 92,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        itemCount: categories.length,
-        separatorBuilder: (context, index) {
-          return const SizedBox(width: 12);
-        },
-        itemBuilder: (context, index) {
-          return CategoryChip(
-            emoji: categories[index][0],
-            title: categories[index][1],
-          );
-        },
-      ),
-    );
-  }
-}
-
-class CategoryChip extends StatelessWidget {
-  final String emoji;
-  final String title;
-
-  const CategoryChip({
-    super.key,
-    required this.emoji,
-    required this.title,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 88,
-      padding: const EdgeInsets.all(10),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.06),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: Colors.white.withOpacity(0.08),
-        ),
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(
-            emoji,
-            style: const TextStyle(fontSize: 25),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 11,
-              color: Colors.white70,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// =====================================================
-// SONG CARD
-// =====================================================
-
-class SongCard extends StatelessWidget {
-  final Song song;
-
-  const SongCard({
-    super.key,
-    required this.song,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(20),
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => KaraokeStudioPage(
-              song: song,
-            ),
-          ),
-        );
-      },
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.055),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: Colors.white.withOpacity(0.07),
-          ),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 54,
-              height: 54,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(16),
-                gradient: const LinearGradient(
-                  colors: [
-                    Color(0xFFFF4FD8),
-                    Color(0xFF654CFF),
-                  ],
-                ),
-              ),
-              child: Icon(
-                song.icon,
-                color: Colors.white,
-              ),
-            ),
-            const SizedBox(width: 13),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    song.title,
-                    style: const TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    song.artist,
-                    style: const TextStyle(
-                      color: Colors.white54,
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const Icon(
-              Icons.play_circle_fill_rounded,
-              color: Color(0xFFFF55D8),
-              size: 35,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// =====================================================
-// EXPLORE
-// =====================================================
-
-class ExplorePage extends StatefulWidget {
-  const ExplorePage({super.key});
-
-  @override
-  State<ExplorePage> createState() => _ExplorePageState();
-}
-
-class _ExplorePageState extends State<ExplorePage> {
-  String query = '';
-
-  @override
-  Widget build(BuildContext context) {
-    final filteredSongs = songs.where((song) {
-      final text =
-          '${song.title} ${song.artist}'.toLowerCase();
-
-      return text.contains(query.toLowerCase());
-    }).toList();
-
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(
-            20,
-            18,
-            20,
-            12,
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Explore',
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 5),
-              const Text(
-                'Discover your next favourite song',
-                style: TextStyle(
-                  color: Colors.white54,
-                ),
-              ),
-              const SizedBox(height: 18),
-              TextField(
-                onChanged: (value) {
-                  setState(() {
-                    query = value;
-                  });
-                },
-                decoration: InputDecoration(
-                  hintText: 'Search songs or artists...',
-                  prefixIcon: const Icon(
-                    Icons.search_rounded,
-                  ),
-                  filled: true,
-                  fillColor: Colors.white.withOpacity(0.07),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(18),
-                    borderSide: BorderSide.none,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        Expanded(
-          child: ListView.builder(
-            padding: const EdgeInsets.fromLTRB(
-              20,
-              8,
-              20,
-              110,
-            ),
-            itemCount: filteredSongs.length,
-            itemBuilder: (context, index) {
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: SongCard(
-                  song: filteredSongs[index],
-                ),
-              );
-            },
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-// =====================================================
-// ROOMS
-// =====================================================
-
-class RoomsPage extends StatelessWidget {
-  const RoomsPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(
-        20,
-        18,
-        20,
-        110,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Karaoke Rooms',
-            style: TextStyle(
-              fontSize: 28,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 5),
-          const Text(
-            'Sing together with your friends',
-            style: TextStyle(
-              color: Colors.white54,
-            ),
-          ),
-          const SizedBox(height: 24),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(22),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(25),
-              gradient: const LinearGradient(
-                colors: [
-                  Color(0xFF7D38FF),
-                  Color(0xFFE62DFF),
-                ],
-              ),
-            ),
-            child: Column(
-              crossAxisAlignment:
-                  CrossAxisAlignment.start,
-              children: [
-                const Icon(
-                  Icons.groups_rounded,
-                  size: 45,
-                ),
-                const SizedBox(height: 15),
-                const Text(
-                  'Create your room',
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 7),
-                const Text(
-                  'Invite friends and start singing together.',
-                  style: TextStyle(
-                    color: Colors.white70,
-                  ),
-                ),
-                const SizedBox(height: 18),
-                ElevatedButton(
-                  onPressed: () {
-                    showDialog(
-                      context: context,
-                      builder: (context) {
-                        return AlertDialog(
-                          title: const Text('Create Room'),
-                          content: const Text(
-                            'Your karaoke room is ready to create!',
-                          ),
-                          actions: [
-                            TextButton(
-                              onPressed: () {
-                                Navigator.pop(context);
-                              },
-                              child: const Text('OK'),
-                            ),
-                          ],
-                        );
-                      },
-                    );
-                  },
-                  child: const Text('Create room'),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 28),
-          const Text(
-            'Live rooms',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 14),
-          const RoomTile(
-            name: 'Music Lovers',
-            people: '12 singers',
-            icon: Icons.music_note_rounded,
-          ),
-          const RoomTile(
-            name: 'Late Night Vibes',
-            people: '8 singers',
-            icon: Icons.nightlight_round,
-          ),
-          const RoomTile(
-            name: 'Bollywood Hits',
-            people: '15 singers',
-            icon: Icons.movie_rounded,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class RoomTile extends StatelessWidget {
-  final String name;
-  final String people;
-  final IconData icon;
-
-  const RoomTile({
-    super.key,
-    required this.name,
-    required this.people,
-    required this.icon,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.06),
-        borderRadius: BorderRadius.circular(18),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 48,
-            height: 48,
-            decoration: const BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: LinearGradient(
-                colors: [
-                  Color(0xFFFF43D0),
-                  Color(0xFF694CFF),
-                ],
-              ),
-            ),
-            child: Icon(icon),
-          ),
-          const SizedBox(width: 13),
-          Expanded(
-            child: Column(
-              crossAxisAlignment:
-                  CrossAxisAlignment.start,
-              children: [
-                Text(
-                  name,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  people,
-                  style: const TextStyle(
-                    color: Colors.white54,
-                    fontSize: 12,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const Icon(
-            Icons.arrow_forward_ios_rounded,
-            size: 16,
-            color: Colors.white54,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// =====================================================
-// PROFILE
-// =====================================================
-
-class ProfilePage extends StatelessWidget {
-  const ProfilePage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(
-        20,
-        18,
-        20,
-        110,
-      ),
-      child: Column(
-        children: [
-          const CircleAvatar(
-            radius: 45,
-            backgroundColor: Color(0xFF8B3DFF),
-            child: Icon(
-              Icons.person_rounded,
-              size: 50,
-            ),
-          ),
-          const SizedBox(height: 12),
-          const Text(
-            'Karaoke Singer',
-            style: TextStyle(
-              fontSize: 23,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 4),
-          const Text(
-            '@singer',
-            style: TextStyle(
-              color: Colors.white54,
-            ),
-          ),
-          const SizedBox(height: 25),
-          Row(
-            children: [
-              Expanded(
-                child: ProfileStat(
-                  value: '24',
-                  label: 'Songs',
-                ),
-              ),
-              Expanded(
-                child: ProfileStat(
-                  value: '8',
-                  label: 'Rooms',
-                ),
-              ),
-              Expanded(
-                child: ProfileStat(
-                  value: '1.2K',
-                  label: 'Likes',
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 25),
-          ProfileOption(
-            icon: Icons.favorite_rounded,
-            title: 'My favourites',
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const AllSongsPage(),
-                ),
-              );
-            },
-          ),
-          ProfileOption(
-            icon: Icons.history_rounded,
-            title: 'Singing history',
-            onTap: () {},
-          ),
-          ProfileOption(
-            icon: Icons.settings_rounded,
-            title: 'Settings',
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const SettingsPage(),
-                ),
-              );
-            },
-          ),
-          ProfileOption(
-            icon: Icons.info_outline_rounded,
-            title: 'About Karaoke',
-            onTap: () {
-              showAboutDialog(
-                context: context,
-                applicationName: 'Karaoke',
-                applicationVersion: '1.0.0',
-                children: const [
-                  Text(
-                    'Sing your favourite songs and enjoy karaoke.',
-                  ),
-                ],
-              );
-            },
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class ProfileStat extends StatelessWidget {
-  final String value;
-  final String label;
-
-  const ProfileStat({
-    super.key,
-    required this.value,
-    required this.label,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 5),
-      padding: const EdgeInsets.symmetric(vertical: 16),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.06),
-        borderRadius: BorderRadius.circular(18),
-      ),
-      child: Column(
-        children: [
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: const TextStyle(
-              fontSize: 11,
-              color: Colors.white54,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class ProfileOption extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final VoidCallback onTap;
-
-  const ProfileOption({
-    super.key,
-    required this.icon,
-    required this.title,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      onTap: onTap,
-      leading: Container(
-        padding: const EdgeInsets.all(10),
-        decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.07),
-          borderRadius: BorderRadius.circular(13),
-        ),
-        child: Icon(
-          icon,
-          color: const Color(0xFFFF55D8),
-        ),
-      ),
-      title: Text(title),
-      trailing: const Icon(
-        Icons.chevron_right_rounded,
-        color: Colors.white54,
-      ),
-    );
-  }
-}
-
-// =====================================================
-// ALL SONGS
-// =====================================================
-
-class AllSongsPage extends StatelessWidget {
-  const AllSongsPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFF08051C),
-      appBar: AppBar(
-        title: const Text('All Songs'),
-        backgroundColor: Colors.transparent,
-      ),
-      body: ListView.builder(
-        padding: const EdgeInsets.all(20),
-        itemCount: songs.length,
-        itemBuilder: (context, index) {
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: SongCard(
-              song: songs[index],
-            ),
-          );
-        },
-      ),
-    );
-  }
-}
-
-// =====================================================
-// KARAOKE STUDIO
-// =====================================================
-
-class KaraokeStudioPage extends StatefulWidget {
-  final Song song;
-
-  const KaraokeStudioPage({
-    super.key,
-    required this.song,
-  });
-
-  @override
-  State<KaraokeStudioPage> createState() =>
-      _KaraokeStudioPageState();
-}
-
-class _KaraokeStudioPageState
-    extends State<KaraokeStudioPage> {
-  bool playing = false;
-  bool liked = false;
-  double progress = 0.25;
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFF070417),
-      appBar: AppBar(
-        title: const Text('Karaoke Studio'),
-        backgroundColor: Colors.transparent,
-        actions: [
-          IconButton(
-            onPressed: () {
-              setState(() {
-                liked = !liked;
-              });
-            },
-            icon: Icon(
-              liked
-                  ? Icons.favorite_rounded
-                  : Icons.favorite_border_rounded,
-              color: liked
-                  ? const Color(0xFFFF4FCF)
-                  : Colors.white,
-            ),
-          ),
-        ],
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          children: [
-            const Spacer(),
-            Container(
-              width: 210,
-              height: 210,
-              decoration: const BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: LinearGradient(
-                  colors: [
-                    Color(0xFFFF42CF),
-                    Color(0xFF654CFF),
-                  ],
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Color(0x665F2DFF),
-                    blurRadius: 45,
-                    spreadRadius: 8,
-                  ),
-                ],
-              ),
-              child: const Icon(
-                Icons.mic_rounded,
-                size: 95,
-              ),
-            ),
-            const SizedBox(height: 35),
-            Text(
-              widget.song.title,
-              style: const TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 7),
-            Text(
-              widget.song.artist,
-              style: const TextStyle(
-                color: Colors.white54,
-                fontSize: 15,
-              ),
-            ),
-            const SizedBox(height: 35),
-            Slider(
-              value: progress,
-              onChanged: (value) {
-                setState(() {
-                  progress = value;
-                });
-              },
-              activeColor: const Color(0xFFFF4FCF),
-            ),
-            const Row(
-              mainAxisAlignment:
-                  MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  '01:12',
-                  style: TextStyle(
-                    color: Colors.white54,
-                  ),
-                ),
-                Text(
-                  '04:10',
-                  style: TextStyle(
-                    color: Colors.white54,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 22),
-            Row(
-              mainAxisAlignment:
-                  MainAxisAlignment.center,
-              children: [
-                IconButton(
-                  onPressed: () {},
-                  icon: const Icon(
-                    Icons.replay_10_rounded,
-                    size: 30,
-                  ),
-                ),
-                const SizedBox(width: 18),
-                GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      playing = !playing;
-                    });
-                  },
-                  child: Container(
-                    width: 72,
-                    height: 72,
-                    decoration: const BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: LinearGradient(
-                        colors: [
-                          Color(0xFFFF4FCF),
-                          Color(0xFF684CFF),
-                        ],
-                      ),
-                    ),
-                    child: Icon(
-                      playing
-                          ? Icons.pause_rounded
-                          : Icons.play_arrow_rounded,
-                      size: 42,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 18),
-                IconButton(
-                  onPressed: () {},
-                  icon: const Icon(
-                    Icons.forward_10_rounded,
-                    size: 30,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 28),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: () {
-                  ScaffoldMessenger.of(context)
-                      .showSnackBar(
-                    const SnackBar(
-                      content: Text(
-                        'Microphone mode is ready!',
-                      ),
-                    ),
-                  );
-                },
-                icon: const Icon(Icons.mic_rounded),
-                label: const Text('Start Singing'),
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(
-                    vertical: 16,
-                  ),
-                  backgroundColor:
-                      const Color(0xFFFF4FCF),
-                  foregroundColor: Colors.white,
-                ),
-              ),
-            ),
-            const Spacer(),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// =====================================================
-// SETTINGS
-// =====================================================
-
-class SettingsPage extends StatefulWidget {
-  const SettingsPage({super.key});
-
-  @override
-  State<SettingsPage> createState() =>
-      _SettingsPageState();
-}
-
-class _SettingsPageState extends State<SettingsPage> {
-  bool notifications = true;
-  bool darkMode = true;
-  bool autoPlay = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFF08051C),
-      appBar: AppBar(
-        title: const Text('Settings'),
-        backgroundColor: Colors.transparent,
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(20),
-        children: [
-          const Text(
-            'Preferences',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 10),
-          SwitchListTile(
-            value: notifications,
-            onChanged: (value) {
-              setState(() {
-                notifications = value;
-              });
-            },
-            title: const Text('Notifications'),
-            subtitle: const Text(
-              'Get updates about songs and rooms',
-            ),
-          ),
-          SwitchListTile(
-            value: darkMode,
-            onChanged: (value) {
-              setState(() {
-                darkMode = value;
-              });
-            },
-            title: const Text('Dark mode'),
-            subtitle: const Text(
-              'Use the dark karaoke theme',
-            ),
-          ),
-          SwitchListTile(
-            value: autoPlay,
-            onChanged: (value) {
-              setState(() {
-                autoPlay = value;
-              });
-            },
-            title: const Text('Auto play'),
-            subtitle: const Text(
-              'Automatically start the next song',
-            ),
-          ),
-          const SizedBox(height: 20),
-          const Text(
-            'Account',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 8),
-          ListTile(
-            leading: const Icon(
-              Icons.lock_outline_rounded,
-            ),
-            title: const Text('Privacy'),
-            trailing: const Icon(
-              Icons.chevron_right_rounded,
-            ),
-            onTap: () {},
-          ),
-          ListTile(
-            leading: const Icon(
-              Icons.help_outline_rounded,
-            ),
-            title: const Text('Help & Support'),
-            trailing: const Icon(
-              Icons.chevron_right_rounded,
-            ),
-            onTap: () {},
-          ),
-        ],
       ),
     );
   }
