@@ -33,13 +33,13 @@ class _HomePageState extends State<HomePage> {
   final categories = [
     ['🔥', 'Popular'],
     ['♡', 'Love'],
-    ['☆', 'Bengali'],
+final List<List<dynamic>> songs = [final List<List<dynamic>> songs = [    ['☆', 'Bengali'],
     ['♫', 'Hindi'],
     ['☺', 'Sad'],
     ['▦', 'More'],
   ];
 
-  final songs = [
+  final List<List<dynamic>> songs = [
     ['1', 'Tum Hi Ho', 'Arijit Singh', Icons.favorite],
     ['2', 'Kesariya', 'Arijit Singh', Icons.nightlight_round],
     ['3', 'Apna Bana Le', 'Arijit Singh', Icons.music_note],
