@@ -17,72 +17,67 @@ class KaraokeApp extends StatelessWidget {
         brightness: Brightness.dark,
         scaffoldBackgroundColor: const Color(0xFF08051C),
         colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFFE83BFF),
+          seedColor: const Color(0xFFFF4FD8),
           brightness: Brightness.dark,
         ),
-        fontFamily: 'sans',
       ),
       home: const MainShell(),
     );
   }
 }
 
-// ---------------- SONG MODEL ----------------
+// =====================================================
+// SONG MODEL
+// =====================================================
 
 class Song {
   final String title;
   final String artist;
-  final String number;
   final IconData icon;
 
   const Song({
     required this.title,
     required this.artist,
-    required this.number,
     required this.icon,
   });
 }
 
-const List<Song> songs = [
-  Song(
+final List<Song> songs = [
+  const Song(
     title: 'Perfect',
     artist: 'Ed Sheeran',
-    number: '01',
     icon: Icons.music_note_rounded,
   ),
-  Song(
+  const Song(
     title: 'Kesariya',
     artist: 'Arijit Singh',
-    number: '02',
     icon: Icons.favorite_rounded,
   ),
-  Song(
+  const Song(
     title: 'Tum Hi Ho',
     artist: 'Arijit Singh',
-    number: '03',
     icon: Icons.mic_rounded,
   ),
-  Song(
+  const Song(
     title: 'Apna Bana Le',
     artist: 'Arijit Singh',
-    number: '04',
     icon: Icons.headphones_rounded,
   ),
-  Song(
+  const Song(
     title: 'Heeriye',
     artist: 'Jasleen Royal',
-    number: '05',
     icon: Icons.graphic_eq_rounded,
   ),
-  Song(
+  const Song(
     title: 'Chaleya',
     artist: 'Arijit Singh',
-    number: '06',
     icon: Icons.music_note_rounded,
   ),
 ];
 
-// ---------------- MAIN SHELL ----------------
+// =====================================================
+// MAIN SHELL
+// =====================================================
 
 class MainShell extends StatefulWidget {
   const MainShell({super.key});
@@ -105,21 +100,29 @@ class _MainShellState extends State<MainShell> {
   Widget build(BuildContext context) {
     return Scaffold(
       extendBody: true,
-      body: Stack(
-        children: [
-          const AppBackground(),
-          SafeArea(
-            bottom: false,
-            child: pages[selectedIndex],
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFF08051C),
+              Color(0xFF17092E),
+              Color(0xFF08051C),
+            ],
           ),
-        ],
+        ),
+        child: SafeArea(
+          bottom: false,
+          child: pages[selectedIndex],
+        ),
       ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: selectedIndex,
-        backgroundColor: const Color(0xFF100B2C),
+        type: BottomNavigationBarType.fixed,
+        backgroundColor: const Color(0xFF110A2B),
         selectedItemColor: const Color(0xFFFF4FD8),
         unselectedItemColor: Colors.white54,
-        type: BottomNavigationBarType.fixed,
         onTap: (index) {
           setState(() {
             selectedIndex = index;
@@ -148,81 +151,9 @@ class _MainShellState extends State<MainShell> {
   }
 }
 
-// ---------------- BACKGROUND ----------------
-
-class AppBackground extends StatelessWidget {
-  const AppBackground({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Color(0xFF09051E),
-            Color(0xFF16082D),
-            Color(0xFF09051B),
-          ],
-        ),
-      ),
-      child: Stack(
-        children: [
-          Positioned(
-            top: -100,
-            right: -80,
-            child: GlowCircle(
-              size: 260,
-              color: const Color(0xFFE92DFF),
-            ),
-          ),
-          Positioned(
-            top: 300,
-            left: -120,
-            child: GlowCircle(
-              size: 240,
-              color: const Color(0xFF583CFF),
-            ),
-          ),
-          Positioned(
-            bottom: -100,
-            right: -50,
-            child: GlowCircle(
-              size: 220,
-              color: const Color(0xFFB02CFF),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class GlowCircle extends StatelessWidget {
-  final double size;
-  final Color color;
-
-  const GlowCircle({
-    super.key,
-    required this.size,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: color.withOpacity(0.08),
-      ),
-    );
-  }
-}
-
-// ---------------- HOME ----------------
+// =====================================================
+// HOME
+// =====================================================
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -230,7 +161,7 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 110),
+      padding: const EdgeInsets.fromLTRB(20, 18, 20, 110),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -253,7 +184,7 @@ class HomePage extends StatelessWidget {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (_) => const AllSongsPage(),
+                  builder: (context) => const AllSongsPage(),
                 ),
               );
             },
@@ -271,6 +202,10 @@ class HomePage extends StatelessWidget {
   }
 }
 
+// =====================================================
+// HOME HEADER
+// =====================================================
+
 class HomeHeader extends StatelessWidget {
   const HomeHeader({super.key});
 
@@ -279,20 +214,19 @@ class HomeHeader extends StatelessWidget {
     return Row(
       children: [
         Container(
-          width: 48,
-          height: 48,
+          width: 50,
+          height: 50,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
             gradient: const LinearGradient(
               colors: [
                 Color(0xFFFF4FCF),
-                Color(0xFF754CFF),
+                Color(0xFF704CFF),
               ],
             ),
           ),
           child: const Icon(
             Icons.mic_rounded,
-            color: Colors.white,
             size: 28,
           ),
         ),
@@ -304,7 +238,7 @@ class HomeHeader extends StatelessWidget {
               Text(
                 'Welcome back 👋',
                 style: TextStyle(
-                  color: Colors.white60,
+                  color: Colors.white54,
                   fontSize: 13,
                 ),
               ),
@@ -327,14 +261,18 @@ class HomeHeader extends StatelessWidget {
               ),
             );
           },
-          icon: const Icon(Icons.notifications_none_rounded),
+          icon: const Icon(
+            Icons.notifications_none_rounded,
+          ),
         ),
       ],
     );
   }
 }
 
-// ---------------- HERO ----------------
+// =====================================================
+// HERO CARD
+// =====================================================
 
 class HeroCard extends StatelessWidget {
   const HeroCard({super.key});
@@ -343,22 +281,22 @@ class HeroCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(22),
+      padding: const EdgeInsets.all(23),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(28),
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            Color(0xFFB92BFF),
-            Color(0xFF632DFF),
-            Color(0xFF3020A5),
+            Color(0xFFB82BFF),
+            Color(0xFF6A35FF),
+            Color(0xFF30209D),
           ],
         ),
-        boxShadow: [
+        boxShadow: const [
           BoxShadow(
-            color: Color(0x665D24FF),
-            blurRadius: 30,
+            color: Color(0x555C27FF),
+            blurRadius: 28,
             spreadRadius: 2,
           ),
         ],
@@ -406,7 +344,7 @@ class HeroCard extends StatelessWidget {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (_) => const KaraokeStudioPage(
+                  builder: (context) => KaraokeStudioPage(
                     song: songs[0],
                   ),
                 ),
@@ -415,7 +353,7 @@ class HeroCard extends StatelessWidget {
             icon: const Icon(Icons.mic_rounded),
             label: const Text('Start singing'),
             style: ElevatedButton.styleFrom(
-              foregroundColor: const Color(0xFF47115F),
+              foregroundColor: const Color(0xFF42105B),
               backgroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(
                 horizontal: 20,
@@ -432,7 +370,9 @@ class HeroCard extends StatelessWidget {
   }
 }
 
-// ---------------- SECTION TITLE ----------------
+// =====================================================
+// SECTION TITLE
+// =====================================================
 
 class SectionTitle extends StatelessWidget {
   final String title;
@@ -467,8 +407,8 @@ class SectionTitle extends StatelessWidget {
               Text(
                 subtitle,
                 style: const TextStyle(
-                  fontSize: 12,
                   color: Colors.white54,
+                  fontSize: 12,
                 ),
               ),
             ],
@@ -489,14 +429,16 @@ class SectionTitle extends StatelessWidget {
   }
 }
 
-// ---------------- CATEGORY ----------------
+// =====================================================
+// CATEGORY
+// =====================================================
 
 class CategoryRow extends StatelessWidget {
   const CategoryRow({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final categories = [
+    const categories = [
       ['🔥', 'Trending'],
       ['💖', 'Love'],
       ['🎧', 'Chill'],
@@ -508,7 +450,9 @@ class CategoryRow extends StatelessWidget {
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: categories.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 12),
+        separatorBuilder: (context, index) {
+          return const SizedBox(width: 12);
+        },
         itemBuilder: (context, index) {
           return CategoryChip(
             emoji: categories[index][0],
@@ -563,7 +507,9 @@ class CategoryChip extends StatelessWidget {
   }
 }
 
-// ---------------- SONG CARD ----------------
+// =====================================================
+// SONG CARD
+// =====================================================
 
 class SongCard extends StatelessWidget {
   final Song song;
@@ -581,7 +527,9 @@ class SongCard extends StatelessWidget {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (_) => KaraokeStudioPage(song: song),
+            builder: (context) => KaraokeStudioPage(
+              song: song,
+            ),
           ),
         );
       },
@@ -597,8 +545,8 @@ class SongCard extends StatelessWidget {
         child: Row(
           children: [
             Container(
-              width: 52,
-              height: 52,
+              width: 54,
+              height: 54,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(16),
                 gradient: const LinearGradient(
@@ -621,8 +569,8 @@ class SongCard extends StatelessWidget {
                   Text(
                     song.title,
                     style: const TextStyle(
-                      fontWeight: FontWeight.bold,
                       fontSize: 15,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -639,7 +587,7 @@ class SongCard extends StatelessWidget {
             const Icon(
               Icons.play_circle_fill_rounded,
               color: Color(0xFFFF55D8),
-              size: 34,
+              size: 35,
             ),
           ],
         ),
@@ -648,7 +596,9 @@ class SongCard extends StatelessWidget {
   }
 }
 
-// ---------------- EXPLORE ----------------
+// =====================================================
+// EXPLORE
+// =====================================================
 
 class ExplorePage extends StatefulWidget {
   const ExplorePage({super.key});
@@ -662,16 +612,22 @@ class _ExplorePageState extends State<ExplorePage> {
 
   @override
   Widget build(BuildContext context) {
-    final filtered = songs.where((song) {
+    final filteredSongs = songs.where((song) {
       final text =
           '${song.title} ${song.artist}'.toLowerCase();
+
       return text.contains(query.toLowerCase());
     }).toList();
 
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(20, 18, 20, 12),
+          padding: const EdgeInsets.fromLTRB(
+            20,
+            18,
+            20,
+            12,
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -698,8 +654,9 @@ class _ExplorePageState extends State<ExplorePage> {
                 },
                 decoration: InputDecoration(
                   hintText: 'Search songs or artists...',
-                  prefixIcon:
-                      const Icon(Icons.search_rounded),
+                  prefixIcon: const Icon(
+                    Icons.search_rounded,
+                  ),
                   filled: true,
                   fillColor: Colors.white.withOpacity(0.07),
                   border: OutlineInputBorder(
@@ -713,12 +670,19 @@ class _ExplorePageState extends State<ExplorePage> {
         ),
         Expanded(
           child: ListView.builder(
-            padding: const EdgeInsets.fromLTRB(20, 8, 20, 110),
-            itemCount: filtered.length,
+            padding: const EdgeInsets.fromLTRB(
+              20,
+              8,
+              20,
+              110,
+            ),
+            itemCount: filteredSongs.length,
             itemBuilder: (context, index) {
               return Padding(
                 padding: const EdgeInsets.only(bottom: 12),
-                child: SongCard(song: filtered[index]),
+                child: SongCard(
+                  song: filteredSongs[index],
+                ),
               );
             },
           ),
@@ -728,7 +692,9 @@ class _ExplorePageState extends State<ExplorePage> {
   }
 }
 
-// ---------------- ROOMS ----------------
+// =====================================================
+// ROOMS
+// =====================================================
 
 class RoomsPage extends StatelessWidget {
   const RoomsPage({super.key});
@@ -736,7 +702,12 @@ class RoomsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(20, 18, 20, 110),
+      padding: const EdgeInsets.fromLTRB(
+        20,
+        18,
+        20,
+        110,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -768,7 +739,8 @@ class RoomsPage extends StatelessWidget {
               ),
             ),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment:
+                  CrossAxisAlignment.start,
               children: [
                 const Icon(
                   Icons.groups_rounded,
@@ -794,20 +766,22 @@ class RoomsPage extends StatelessWidget {
                   onPressed: () {
                     showDialog(
                       context: context,
-                      builder: (_) => AlertDialog(
-                        title: const Text('Create Room'),
-                        content: const Text(
-                          'Your karaoke room is ready to create!',
-                        ),
-                        actions: [
-                          TextButton(
-                            onPressed: () {
-                              Navigator.pop(context);
-                            },
-                            child: const Text('OK'),
+                      builder: (context) {
+                        return AlertDialog(
+                          title: const Text('Create Room'),
+                          content: const Text(
+                            'Your karaoke room is ready to create!',
                           ),
-                        ],
-                      ),
+                          actions: [
+                            TextButton(
+                              onPressed: () {
+                                Navigator.pop(context);
+                              },
+                              child: const Text('OK'),
+                            ),
+                          ],
+                        );
+                      },
                     );
                   },
                   child: const Text('Create room'),
@@ -871,9 +845,9 @@ class RoomTile extends StatelessWidget {
           Container(
             width: 48,
             height: 48,
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               shape: BoxShape.circle,
-              gradient: const LinearGradient(
+              gradient: LinearGradient(
                 colors: [
                   Color(0xFFFF43D0),
                   Color(0xFF694CFF),
@@ -885,7 +859,8 @@ class RoomTile extends StatelessWidget {
           const SizedBox(width: 13),
           Expanded(
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment:
+                  CrossAxisAlignment.start,
               children: [
                 Text(
                   name,
@@ -915,7 +890,9 @@ class RoomTile extends StatelessWidget {
   }
 }
 
-// ---------------- PROFILE ----------------
+// =====================================================
+// PROFILE
+// =====================================================
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
@@ -923,7 +900,12 @@ class ProfilePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(20, 18, 20, 110),
+      padding: const EdgeInsets.fromLTRB(
+        20,
+        18,
+        20,
+        110,
+      ),
       child: Column(
         children: [
           const CircleAvatar(
@@ -932,7 +914,6 @@ class ProfilePage extends StatelessWidget {
             child: Icon(
               Icons.person_rounded,
               size: 50,
-              color: Colors.white,
             ),
           ),
           const SizedBox(height: 12),
@@ -981,7 +962,7 @@ class ProfilePage extends StatelessWidget {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (_) => const AllSongsPage(),
+                  builder: (context) => const AllSongsPage(),
                 ),
               );
             },
@@ -998,7 +979,7 @@ class ProfilePage extends StatelessWidget {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (_) => const SettingsPage(),
+                  builder: (context) => const SettingsPage(),
                 ),
               );
             },
@@ -1103,7 +1084,9 @@ class ProfileOption extends StatelessWidget {
   }
 }
 
-// ---------------- ALL SONGS ----------------
+// =====================================================
+// ALL SONGS
+// =====================================================
 
 class AllSongsPage extends StatelessWidget {
   const AllSongsPage({super.key});
@@ -1122,7 +1105,9 @@ class AllSongsPage extends StatelessWidget {
         itemBuilder: (context, index) {
           return Padding(
             padding: const EdgeInsets.only(bottom: 12),
-            child: SongCard(song: songs[index]),
+            child: SongCard(
+              song: songs[index],
+            ),
           );
         },
       ),
@@ -1130,7 +1115,9 @@ class AllSongsPage extends StatelessWidget {
   }
 }
 
-// ---------------- KARAOKE STUDIO ----------------
+// =====================================================
+// KARAOKE STUDIO
+// =====================================================
 
 class KaraokeStudioPage extends StatefulWidget {
   final Song song;
@@ -1184,15 +1171,15 @@ class _KaraokeStudioPageState
             Container(
               width: 210,
               height: 210,
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 shape: BoxShape.circle,
-                gradient: const LinearGradient(
+                gradient: LinearGradient(
                   colors: [
                     Color(0xFFFF42CF),
                     Color(0xFF654CFF),
                   ],
                 ),
-                boxShadow: const [
+                boxShadow: [
                   BoxShadow(
                     color: Color(0x665F2DFF),
                     blurRadius: 45,
@@ -1237,17 +1224,22 @@ class _KaraokeStudioPageState
               children: [
                 Text(
                   '01:12',
-                  style: TextStyle(color: Colors.white54),
+                  style: TextStyle(
+                    color: Colors.white54,
+                  ),
                 ),
                 Text(
                   '04:10',
-                  style: TextStyle(color: Colors.white54),
+                  style: TextStyle(
+                    color: Colors.white54,
+                  ),
                 ),
               ],
             ),
             const SizedBox(height: 22),
             Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisAlignment:
+                  MainAxisAlignment.center,
               children: [
                 IconButton(
                   onPressed: () {},
@@ -1298,7 +1290,8 @@ class _KaraokeStudioPageState
               width: double.infinity,
               child: ElevatedButton.icon(
                 onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
+                  ScaffoldMessenger.of(context)
+                      .showSnackBar(
                     const SnackBar(
                       content: Text(
                         'Microphone mode is ready!',
@@ -1326,7 +1319,9 @@ class _KaraokeStudioPageState
   }
 }
 
-// ---------------- SETTINGS ----------------
+// =====================================================
+// SETTINGS
+// =====================================================
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -1406,7 +1401,9 @@ class _SettingsPageState extends State<SettingsPage> {
           ),
           const SizedBox(height: 8),
           ListTile(
-            leading: const Icon(Icons.lock_outline_rounded),
+            leading: const Icon(
+              Icons.lock_outline_rounded,
+            ),
             title: const Text('Privacy'),
             trailing: const Icon(
               Icons.chevron_right_rounded,
@@ -1414,7 +1411,9 @@ class _SettingsPageState extends State<SettingsPage> {
             onTap: () {},
           ),
           ListTile(
-            leading: const Icon(Icons.help_outline_rounded),
+            leading: const Icon(
+              Icons.help_outline_rounded,
+            ),
             title: const Text('Help & Support'),
             trailing: const Icon(
               Icons.chevron_right_rounded,
