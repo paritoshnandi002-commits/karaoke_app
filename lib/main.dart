@@ -151,10 +151,132 @@ class SongTile extends StatelessWidget {
 class ExplorePage extends StatefulWidget { final ValueChanged<Song> onSong; const ExplorePage({super.key, required this.onSong}); @override State<ExplorePage> createState()=>_ExploreState(); }
 class _ExploreState extends State<ExplorePage> { String q=''; @override Widget build(BuildContext context) { final list=songs.where((s)=>('${s.title} ${s.artist}').toLowerCase().contains(q.toLowerCase())).toList(); return ListView(padding: const EdgeInsets.fromLTRB(20,18,20,110), children:[const Text('Explore',style:TextStyle(fontSize:28,fontWeight:FontWeight.w900)),const SizedBox(height:18),TextField(onChanged:(v)=>setState(()=>q=v),decoration:InputDecoration(hintText:'Search songs, artists...',prefixIcon:const Icon(Icons.search_rounded),filled:true,fillColor:Colors.white10,border:OutlineInputBorder(borderRadius:BorderRadius.all(Radius.circular(20)),borderSide:BorderSide.none))),const SizedBox(height:22),...list.map((s)=>Padding(padding:const EdgeInsets.only(bottom:10),child:SongTile(song:s,onTap:()=>widget.onSong(s))))]); } }
 
-class PlayerPage extends StatefulWidget { final Song song; const PlayerPage({super.key,required this.song}); @override State<PlayerPage> createState()=>_PlayerState(); }
+class PlayerPage extends StatefulWidget {
+  final Song song;
+  const PlayerPage({super.key, required this.song});
+
+  @override
+  State<PlayerPage> createState() => _PlayerState();
+}
+
 class _PlayerState extends State<PlayerPage> {
   final AudioPlayer _audio = AudioPlayer();
- bool play=false,like=false; double value=.35; @override Widget build(BuildContext context)=>ListView(padding:const EdgeInsets.fromLTRB(20,18,20,110),children:[const Text('Now singing',style:TextStyle(color:Colors.white60)),const SizedBox(height:7),Text(widget.song.title,style:const TextStyle(fontSize:27,fontWeight:FontWeight.w900)),Text(widget.song.artist,style:const TextStyle(color:Colors.white54)),const SizedBox(height:25),Container(height:245,decoration:BoxDecoration(borderRadius:BorderRadius.circular(32),gradient:const LinearGradient(colors:[Color(0xFF9A2CFF),Color(0xFFE82BC4),Color(0xFF264CFF)]),boxShadow:[BoxShadow(color:Color(0x55FF35C8),blurRadius:35)]),child:const Center(child:Icon(Icons.mic_rounded,size:105,color:Colors.white24))),const SizedBox(height:24),Glass(child:Column(children:[const Text('♪  Sing along with the lyrics  ♪',style:TextStyle(color:Colors.white70)),const SizedBox(height:18),const Text('Feel the music',style:TextStyle(fontSize:23,fontWeight:FontWeight.w800)),const SizedBox(height:8),const Text('Let your voice shine tonight',style:TextStyle(color:Color(0xFFFF75DD))),const SizedBox(height:12),Slider(value:value,onChanged:(v)=>setState(()=>value=v),activeColor:Color(0xFFFF45CF)),Row(mainAxisAlignment:MainAxisAlignment.center,children:[IconButton(onPressed:(){},icon:const Icon(Icons.skip_previous_rounded)),Container(width:62,height:62,decoration:const BoxDecoration(shape:BoxShape.circle,gradient:LinearGradient(colors:[Color(0xFFFF39C7),Color(0xFF7146FF)])),child:IconButton(onPressed:_togglePlay,icon:Icon(play?Icons.pause_rounded:Icons.play_arrow_rounded,size:32))),IconButton(onPressed:(){},icon:const Icon(Icons.skip_next_rounded)),IconButton(onPressed:()=>setState(()=>like=!like),icon:Icon(like?Icons.favorite_rounded:Icons.favorite_border_rounded,color:like?const Color(0xFFFF4ED2):null))])]))]); }
+  bool play = false, like = false;
+  double value = .35;
+
+  Future<void> _togglePlay() async {
+    try {
+      if (play) {
+        await _audio.pause();
+      } else {
+        await _audio.play(UrlSource(widget.song.audioUrl));
+      }
+      if (mounted) {
+        setState(() => play = !play);
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Audio play failed: $e')),
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    _audio.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => ListView(
+    padding: const EdgeInsets.fromLTRB(20, 18, 20, 110),
+    children: [
+      const Text('Now singing', style: TextStyle(color: Colors.white60)),
+      const SizedBox(height: 7),
+      Text(widget.song.title,
+          style: const TextStyle(fontSize: 27, fontWeight: FontWeight.w900)),
+      Text(widget.song.artist,
+          style: const TextStyle(color: Colors.white54)),
+      const SizedBox(height: 25),
+      Container(
+        height: 245,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(32),
+          gradient: const LinearGradient(
+            colors: [Color(0xFF9A2CFF), Color(0xFFE82BC4), Color(0xFF264CFF)],
+          ),
+          boxShadow: const [
+            BoxShadow(color: Color(0x55FF35C8), blurRadius: 35)
+          ],
+        ),
+        child: const Center(
+          child: Icon(Icons.mic_rounded, size: 105, color: Colors.white24),
+        ),
+      ),
+      const SizedBox(height: 24),
+      Glass(
+        child: Column(
+          children: [
+            const Text('♪  Sing along with the lyrics  ♪',
+                style: TextStyle(color: Colors.white70)),
+            const SizedBox(height: 18),
+            const Text('Feel the music',
+                style: TextStyle(fontSize: 23, fontWeight: FontWeight.w800)),
+            const SizedBox(height: 8),
+            const Text('Let your voice shine tonight',
+                style: TextStyle(color: Color(0xFFFF75DD))),
+            const SizedBox(height: 12),
+            Slider(
+              value: value,
+              onChanged: (v) => setState(() => value = v),
+              activeColor: const Color(0xFFFF45CF),
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                IconButton(
+                  onPressed: () {},
+                  icon: const Icon(Icons.skip_previous_rounded),
+                ),
+                Container(
+                  width: 62,
+                  height: 62,
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: LinearGradient(
+                      colors: [Color(0xFFFF39C7), Color(0xFF7146FF)],
+                    ),
+                  ),
+                  child: IconButton(
+                    onPressed: _togglePlay,
+                    icon: Icon(
+                      play ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                      size: 32,
+                    ),
+                  ),
+                ),
+                IconButton(
+                  onPressed: () {},
+                  icon: const Icon(Icons.skip_next_rounded),
+                ),
+                IconButton(
+                  onPressed: () => setState(() => like = !like),
+                  icon: Icon(
+                    like
+                        ? Icons.favorite_rounded
+                        : Icons.favorite_border_rounded,
+                    color: like ? const Color(0xFFFF4ED2) : null,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    ],
+  );
+}
 
 class RoomsPage extends StatelessWidget { const RoomsPage({super.key}); @override Widget build(BuildContext context){ final data=[('Late Night Vibes','24 singers',Icons.nightlife_rounded),('Bollywood Hits','18 singers',Icons.local_fire_department_rounded),('Chill & Sing','12 singers',Icons.favorite_rounded)]; return ListView(padding:const EdgeInsets.fromLTRB(20,18,20,110),children:[Row(children:[const Expanded(child:Text('Live Rooms',style:TextStyle(fontSize:28,fontWeight:FontWeight.w900))),FilledButton.icon(onPressed:()=>_create(context),icon:const Icon(Icons.add_rounded),label:const Text('Create'))]),const SizedBox(height:18),...data.map((r)=>Padding(padding:const EdgeInsets.only(bottom:12),child:Glass(onTap:()=>_join(context,r.$1),child:Row(children:[Container(width:58,height:58,decoration:const BoxDecoration(shape:BoxShape.circle,gradient:LinearGradient(colors:[Color(0xFFFF3DC9),Color(0xFF6A45FF)])),child:Icon(r.$3)),const SizedBox(width:14),Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text(r.$1,style:const TextStyle(fontWeight:FontWeight.w800)),const SizedBox(height:4),Text(r.$2,style:const TextStyle(color:Colors.white54))])),const Icon(Icons.chevron_right_rounded)]))))]); }
 void _join(BuildContext c,String name)=>showDialog(context:c,builder:(_)=>AlertDialog(title:Text(name),content:const Text('Join this live karaoke room?'),actions:[TextButton(onPressed:()=>Navigator.pop(c),child:const Text('Cancel')),FilledButton(onPressed:()=>Navigator.pop(c),child:const Text('Join'))]));
@@ -165,11 +287,87 @@ class ProfilePage extends StatelessWidget { final VoidCallback onSettings; const
 Widget _stat(String a,String b)=>Expanded(child:Glass(padding:const EdgeInsets.symmetric(vertical:17),child:Column(children:[Text(a,style:const TextStyle(fontSize:20,fontWeight:FontWeight.w900)),const SizedBox(height:4),Text(b,style:const TextStyle(color:Colors.white54,fontSize:12))])));
 }
 
-class SettingsPage extends StatefulWidget { const SettingsPage({super.key}); @override State<SettingsPage> createState()=>_SettingsState(); }
-class _SettingsState extends State<SettingsPage>{bool notification=true,dark=true; @override Widget build(BuildContext context)=>Scaffold(backgroundColor:const Color(0xFF08051F),appBar:AppBar(backgroundColor:Colors.transparent,title:const Text('Settings'),),body:ListView(padding:const EdgeInsets.all(20),children:[Glass(child:Column(children:[_row(Icons.security_rounded,'Account & Security',()=>_msg('Account protected')),const Divider(color:Colors.white10),_switch('Notifications',notification,(v)=>setState(()=>notification=v)),const Divider(color:Colors.white10),_switch('Dark Mode',dark,(v)=>setState(()=>dark=v)),const Divider(color:Colors.white10),_row(Icons.language_rounded,'Language',()=>_msg('English')),const Divider(color:Colors.white10),_row(Icons.privacy_tip_outlined,'Privacy Policy',()=>_msg('Your privacy matters')),const Divider(color:Colors.white10),_row(Icons.help_outline_rounded,'Help & Support',()=>_msg('Support is ready')),const Divider(color:Colors.white10),_row(Icons.info_outline_rounded,'About App',()=>_msg('Karaoke • Version 1.0.0'))]))]); }
-Widget _row(IconData i,String t,VoidCallback f)=>ListTile(onTap:f,contentPadding:EdgeInsets.zero,leading:Icon(i,color:const Color(0xFFFF63D7)),title:Text(t),trailing:const Icon(Icons.chevron_right_rounded,color:Colors.white54));
-Widget _switch(String t,bool v,ValueChanged<bool> f)=>SwitchListTile(contentPadding:EdgeInsets.zero,title:Text(t),value:v,onChanged:f,activeColor:const Color(0xFFFF4ACF));
-void _msg(String s)=>showDialog(context:context,builder:(_)=>AlertDialog(title:const Text('Karaoke'),content:Text(s),actions:[TextButton(onPressed:()=>Navigator.pop(context),child:const Text('OK'))]));
+class SettingsPage extends StatefulWidget {
+  const SettingsPage({super.key});
+
+  @override
+  State<SettingsPage> createState() => _SettingsState();
+}
+
+class _SettingsState extends State<SettingsPage> {
+  bool notification = true, dark = true;
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    backgroundColor: const Color(0xFF08051F),
+    appBar: AppBar(
+      backgroundColor: Colors.transparent,
+      title: const Text('Settings'),
+    ),
+    body: ListView(
+      padding: const EdgeInsets.all(20),
+      children: [
+        Glass(
+          child: Column(
+            children: [
+              _row(context, Icons.security_rounded, 'Account & Security',
+                  'Account protected'),
+              const Divider(color: Colors.white10),
+              _switch('Notifications', notification,
+                  (v) => setState(() => notification = v)),
+              const Divider(color: Colors.white10),
+              _switch('Dark Mode', dark,
+                  (v) => setState(() => dark = v)),
+              const Divider(color: Colors.white10),
+              _row(context, Icons.language_rounded, 'Language', 'English'),
+              const Divider(color: Colors.white10),
+              _row(context, Icons.privacy_tip_outlined, 'Privacy Policy',
+                  'Your privacy matters'),
+              const Divider(color: Colors.white10),
+              _row(context, Icons.help_outline_rounded, 'Help & Support',
+                  'Support is ready'),
+              const Divider(color: Colors.white10),
+              _row(context, Icons.info_outline_rounded, 'About App',
+                  'Karaoke • Version 1.0.0'),
+            ],
+          ),
+        ),
+      ],
+    ),
+  );
+
+  Widget _row(BuildContext context, IconData i, String t, String message) =>
+      ListTile(
+        onTap: () => _msg(context, message),
+        contentPadding: EdgeInsets.zero,
+        leading: Icon(i, color: const Color(0xFFFF63D7)),
+        title: Text(t),
+        trailing: const Icon(Icons.chevron_right_rounded,
+            color: Colors.white54),
+      );
+
+  Widget _switch(String t, bool v, ValueChanged<bool> f) =>
+      SwitchListTile(
+        contentPadding: EdgeInsets.zero,
+        title: Text(t),
+        value: v,
+        onChanged: f,
+        activeColor: const Color(0xFFFF4ACF),
+      );
+
+  void _msg(BuildContext context, String s) => showDialog(
+    context: context,
+    builder: (_) => AlertDialog(
+      title: const Text('Karaoke'),
+      content: Text(s),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('OK'),
+        ),
+      ],
+    ),
+  );
 }
 
 class NavBar extends StatelessWidget { final int index; final ValueChanged<int> onTap; const NavBar({super.key,required this.index,required this.onTap}); @override Widget build(BuildContext context)=>Container(margin:const EdgeInsets.fromLTRB(12,0,12,12),decoration:BoxDecoration(color:const Color(0xEE100C31),borderRadius:BorderRadius.circular(26),border:Border.all(color:Colors.white12),boxShadow:[BoxShadow(color:const Color(0x33FF28C4),blurRadius:25)]),child:NavigationBar(backgroundColor:Colors.transparent,elevation:0,selectedIndex:index,indicatorColor:const Color(0x55FF3DC9),onDestinationSelected:onTap,destinations:const[NavigationDestination(icon:Icon(Icons.home_outlined),selectedIcon:Icon(Icons.home_rounded),label:'Home'),NavigationDestination(icon:Icon(Icons.explore_outlined),selectedIcon:Icon(Icons.explore_rounded),label:'Explore'),NavigationDestination(icon:Icon(Icons.mic_none_rounded),selectedIcon:Icon(Icons.mic_rounded),label:'Sing'),NavigationDestination(icon:Icon(Icons.meeting_room_outlined),selectedIcon:Icon(Icons.meeting_room_rounded),label:'Room'),NavigationDestination(icon:Icon(Icons.person_outline_rounded),selectedIcon:Icon(Icons.person_rounded),label:'Profile')])); }
