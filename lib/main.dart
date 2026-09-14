@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
+import 'package:file_picker/file_picker.dart';
 
 void main() => runApp(const KaraokeApp());
 
@@ -42,12 +43,26 @@ class Shell extends StatefulWidget {
 class _ShellState extends State<Shell> {
   int tab = 0;
   Song selected = songs[0];
+  final List<Song> uploadedSongs = [];
+
+  List<Song> get allSongs => [...songs, ...uploadedSongs];
+
   void song(Song s) => setState(() { selected = s; tab = 2; });
+
+  void addUploadedSong(Song s) {
+    setState(() => uploadedSongs.insert(0, s));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('${s.title} added to your library')),
+    );
+  }
+
   @override Widget build(BuildContext context) {
     final pages = <Widget>[
-      HomePage(onSong: song, onRoom: () => setState(() => tab = 3)),
-      ExplorePage(onSong: song), PlayerPage(song: selected), const RoomsPage(),
-      ProfilePage(onSettings: () => _settings(context)),
+      HomePage(onSong: song, onRoom: () => setState(() => tab = 3), songs: allSongs),
+      ExplorePage(onSong: song, songs: allSongs),
+      PlayerPage(song: selected),
+      const RoomsPage(),
+      ProfilePage(onSettings: () => _settings(context, addUploadedSong)),
     ];
     return Scaffold(
       extendBody: true,
@@ -55,7 +70,11 @@ class _ShellState extends State<Shell> {
       bottomNavigationBar: NavBar(index: tab, onTap: (v) => setState(() => tab = v)),
     );
   }
-  void _settings(BuildContext context) => Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsPage()));
+
+  void _settings(BuildContext context, ValueChanged<Song> onAdd) =>
+      Navigator.push(context, MaterialPageRoute(
+        builder: (_) => SettingsPage(onAddSong: onAdd),
+      ));
 }
 
 class GlossyBackground extends StatelessWidget {
@@ -96,8 +115,8 @@ class Glass extends StatelessWidget {
 }
 
 class HomePage extends StatelessWidget {
-  final ValueChanged<Song> onSong; final VoidCallback onRoom;
-  const HomePage({super.key, required this.onSong, required this.onRoom});
+  final ValueChanged<Song> onSong; final VoidCallback onRoom; final List<Song> songs;
+  const HomePage({super.key, required this.onSong, required this.onRoom, required this.songs});
   @override Widget build(BuildContext context) => CustomScrollView(physics: const BouncingScrollPhysics(), slivers: [
     SliverPadding(padding: const EdgeInsets.fromLTRB(20, 14, 20, 0), sliver: SliverToBoxAdapter(child: Row(children: [
       const Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -148,8 +167,8 @@ class SongTile extends StatelessWidget {
   ]));
 }
 
-class ExplorePage extends StatefulWidget { final ValueChanged<Song> onSong; const ExplorePage({super.key, required this.onSong}); @override State<ExplorePage> createState()=>_ExploreState(); }
-class _ExploreState extends State<ExplorePage> { String q=''; @override Widget build(BuildContext context) { final list=songs.where((s)=>('${s.title} ${s.artist}').toLowerCase().contains(q.toLowerCase())).toList(); return ListView(padding: const EdgeInsets.fromLTRB(20,18,20,110), children:[const Text('Explore',style:TextStyle(fontSize:28,fontWeight:FontWeight.w900)),const SizedBox(height:18),TextField(onChanged:(v)=>setState(()=>q=v),decoration:InputDecoration(hintText:'Search songs, artists...',prefixIcon:const Icon(Icons.search_rounded),filled:true,fillColor:Colors.white10,border:OutlineInputBorder(borderRadius:BorderRadius.all(Radius.circular(20)),borderSide:BorderSide.none))),const SizedBox(height:22),...list.map((s)=>Padding(padding:const EdgeInsets.only(bottom:10),child:SongTile(song:s,onTap:()=>widget.onSong(s))))]); } }
+class ExplorePage extends StatefulWidget { final ValueChanged<Song> onSong; final List<Song> songs; const ExplorePage({super.key, required this.onSong, required this.songs}); @override State<ExplorePage> createState()=>_ExploreState(); }
+class _ExploreState extends State<ExplorePage> { String q=''; @override Widget build(BuildContext context) { final list=widget.songs.where((s)=>('${s.title} ${s.artist}').toLowerCase().contains(q.toLowerCase())).toList(); return ListView(padding: const EdgeInsets.fromLTRB(20,18,20,110), children:[const Text('Explore',style:TextStyle(fontSize:28,fontWeight:FontWeight.w900)),const SizedBox(height:18),TextField(onChanged:(v)=>setState(()=>q=v),decoration:InputDecoration(hintText:'Search songs, artists...',prefixIcon:const Icon(Icons.search_rounded),filled:true,fillColor:Colors.white10,border:OutlineInputBorder(borderRadius:BorderRadius.all(Radius.circular(20)),borderSide:BorderSide.none))),const SizedBox(height:22),...list.map((s)=>Padding(padding:const EdgeInsets.only(bottom:10),child:SongTile(song:s,onTap:()=>widget.onSong(s))))]); } }
 
 class PlayerPage extends StatefulWidget {
   final Song song;
@@ -169,7 +188,10 @@ class _PlayerState extends State<PlayerPage> {
       if (play) {
         await _audio.pause();
       } else {
-        await _audio.play(UrlSource(widget.song.audioUrl));
+        final source = widget.song.audioUrl.startsWith('/')
+            ? DeviceFileSource(widget.song.audioUrl)
+            : UrlSource(widget.song.audioUrl);
+        await _audio.play(source);
       }
       if (mounted) {
         setState(() => play = !play);
@@ -285,9 +307,11 @@ void _create(BuildContext c){final x=TextEditingController();showDialog(context:
 
 class ProfilePage extends StatelessWidget { final VoidCallback onSettings; const ProfilePage({super.key,required this.onSettings}); @override Widget build(BuildContext context)=>ListView(padding:const EdgeInsets.fromLTRB(20,18,20,110),children:[Row(children:[const Expanded(child:Text('Profile',style:TextStyle(fontSize:28,fontWeight:FontWeight.w900))),IconButton(onPressed:onSettings,icon:const Icon(Icons.settings_outlined))]),const SizedBox(height:18),Glass(child:Row(children:[Container(width:72,height:72,decoration:const BoxDecoration(shape:BoxShape.circle,gradient:LinearGradient(colors:[Color(0xFFFF3BC8),Color(0xFF6647FF)])),child:const Icon(Icons.person_rounded,size:38)),const SizedBox(width:16),const Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text('Karaoke Star',style:TextStyle(fontSize:20,fontWeight:FontWeight.w800)),SizedBox(height:5),Text('@singwithme',style:TextStyle(color:Colors.white54))])])),const SizedBox(height:14),Row(children:[_stat('128','Songs'),_stat('42','Followers'),_stat('19','Following')]),const SizedBox(height:14),Glass(onTap:onSettings,child:const Row(children:[Icon(Icons.settings_rounded,color:Color(0xFFFF63D7)),SizedBox(width:14),Expanded(child:Text('Settings',style:TextStyle(fontWeight:FontWeight.w700))),Icon(Icons.chevron_right_rounded)]))]); }
 Widget _stat(String a,String b)=>Expanded(child:Glass(padding:const EdgeInsets.symmetric(vertical:17),child:Column(children:[Text(a,style:const TextStyle(fontSize:20,fontWeight:FontWeight.w900)),const SizedBox(height:4),Text(b,style:const TextStyle(color:Colors.white54,fontSize:12))])));
+}
 
 class SettingsPage extends StatefulWidget {
-  const SettingsPage({super.key});
+  final ValueChanged<Song> onAddSong;
+  const SettingsPage({super.key, required this.onAddSong});
 
   @override
   State<SettingsPage> createState() => _SettingsState();
@@ -328,6 +352,20 @@ class _SettingsState extends State<SettingsPage> {
               const Divider(color: Colors.white10),
               _row(context, Icons.info_outline_rounded, 'About App',
                   'Karaoke • Version 1.0.0'),
+              const Divider(color: Colors.white10),
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const Icon(Icons.admin_panel_settings_rounded,
+                    color: Color(0xFFFF63D7)),
+                title: const Text('Owner Music Studio',
+                    style: TextStyle(fontWeight: FontWeight.w800)),
+                subtitle: const Text('Upload your own audio files'),
+                trailing: const Icon(Icons.chevron_right_rounded,
+                    color: Colors.white54),
+                onTap: () => Navigator.push(context, MaterialPageRoute(
+                  builder: (_) => OwnerMusicPage(onAddSong: widget.onAddSong),
+                )),
+              ),
             ],
           ),
         ),
@@ -364,6 +402,117 @@ class _SettingsState extends State<SettingsPage> {
           onPressed: () => Navigator.pop(context),
           child: const Text('OK'),
         ),
+      ],
+    ),
+  );
+}
+
+
+class OwnerMusicPage extends StatefulWidget {
+  final ValueChanged<Song> onAddSong;
+  const OwnerMusicPage({super.key, required this.onAddSong});
+
+  @override
+  State<OwnerMusicPage> createState() => _OwnerMusicPageState();
+}
+
+class _OwnerMusicPageState extends State<OwnerMusicPage> {
+  final List<Song> added = [];
+  final title = TextEditingController();
+  final artist = TextEditingController();
+  String? audioPath;
+  String audioName = '';
+
+  @override
+  void dispose() {
+    title.dispose();
+    artist.dispose();
+    super.dispose();
+  }
+
+  Future<void> pickAudio() async {
+    final result = await FilePicker.platform.pickFiles(type: FileType.audio);
+    if (result == null || result.files.single.path == null) return;
+    setState(() {
+      audioPath = result.files.single.path!;
+      audioName = result.files.single.name;
+    });
+  }
+
+  void addSong() {
+    final t = title.text.trim();
+    final a = artist.text.trim();
+    if (t.isEmpty || audioPath == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Enter a title and choose an audio file.')),
+      );
+      return;
+    }
+    final s = Song(t, a.isEmpty ? 'My Library' : a,
+        Icons.music_note_rounded, audioPath!);
+    widget.onAddSong(s);
+    setState(() {
+      added.insert(0, s);
+      title.clear();
+      artist.clear();
+      audioPath = null;
+      audioName = '';
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    backgroundColor: const Color(0xFF08051F),
+    appBar: AppBar(
+      backgroundColor: Colors.transparent,
+      title: const Text('Owner Music Studio'),
+    ),
+    body: ListView(
+      padding: const EdgeInsets.fromLTRB(20, 10, 20, 30),
+      children: [
+        Glass(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          const Text('Upload Music', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900)),
+          const SizedBox(height: 6),
+          const Text('Add an audio file from this phone to your karaoke library.',
+              style: TextStyle(color: Colors.white60)),
+          const SizedBox(height: 18),
+          TextField(controller: title, decoration: const InputDecoration(
+            labelText: 'Song title', prefixIcon: Icon(Icons.title_rounded))),
+          const SizedBox(height: 12),
+          TextField(controller: artist, decoration: const InputDecoration(
+            labelText: 'Artist name', prefixIcon: Icon(Icons.person_outline_rounded))),
+          const SizedBox(height: 14),
+          OutlinedButton.icon(
+            onPressed: pickAudio,
+            icon: const Icon(Icons.audio_file_rounded),
+            label: Text(audioName.isEmpty ? 'Choose audio file' : audioName),
+          ),
+          const SizedBox(height: 14),
+          SizedBox(width: double.infinity, child: FilledButton.icon(
+            onPressed: addSong,
+            icon: const Icon(Icons.cloud_upload_rounded),
+            label: const Text('Add to Music Library'),
+          )),
+        ])),
+        const SizedBox(height: 20),
+        const Text('Added in this session', style: TextStyle(fontSize: 19, fontWeight: FontWeight.w800)),
+        const SizedBox(height: 10),
+        if (added.isEmpty)
+          const Text('No uploaded songs yet.', style: TextStyle(color: Colors.white54))
+        else
+          ...added.map((s) => Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: Glass(child: Row(children: [
+              const Icon(Icons.music_note_rounded, color: Color(0xFFFF5BD5)),
+              const SizedBox(width: 12),
+              Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text(s.title, style: const TextStyle(fontWeight: FontWeight.w800)),
+                const SizedBox(height: 3),
+                Text(s.artist, style: const TextStyle(color: Colors.white54, fontSize: 12)),
+              ])),
+              const Icon(Icons.check_circle_rounded, color: Color(0xFFFF5BD5)),
+            ])),
+          )),
       ],
     ),
   );
