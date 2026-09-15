@@ -173,28 +173,121 @@ class _ExploreState extends State<ExplorePage> { String q=''; @override Widget b
 class PlayerPage extends StatefulWidget {
   final Song song;
   const PlayerPage({super.key, required this.song});
-
-  @override
-  State<PlayerPage> createState() => _PlayerState();
+  @override State<PlayerPage> createState() => _PlayerState();
 }
 
 class _PlayerState extends State<PlayerPage> {
-  final AudioPlayer _audio = AudioPlayer();
-  bool play = false, like = false;
+  final SoLoud _soloud = SoLoud.instance;
+  final Recorder _recorder = Recorder.instance;
+  AudioSource? _source;
+  SoundHandle? _handle;
+  bool play = false, like = false, mic = false, _ready = false;
   double value = .35;
+  String effect = 'Clean';
+
+  final List<String> effects = const [
+    'Clean', 'Reverb', 'Echo', 'Studio', 'Karaoke', 'Concert',
+  ];
+
+  Future<void> _initAudio() async {
+    try {
+      await _soloud.init();
+      await _recorder.init(
+        androidInputPreset: AndroidInputPreset.voiceCommunication,
+      );
+      _recorder.filters.echoCancellationFilter.activate();
+      _ready = true;
+      if (mounted) setState(() {});
+      await _loadSource();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Audio engine failed: $e')),
+      );
+    }
+  }
+
+  Future<void> _loadSource() async {
+    if (!_ready) return;
+    try {
+      if (_handle != null) {
+        await _soloud.stop(_handle!);
+        _handle = null;
+      }
+      if (_source != null) {
+        await _soloud.disposeSource(_source!);
+        _source = null;
+      }
+      final path = widget.song.audioUrl;
+      _source = path.startsWith('/')
+          ? await _soloud.loadFile(path)
+          : await _soloud.loadUrl(path);
+      _applyEffectToSource();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Song load failed: $e')),
+      );
+    }
+  }
+
+  void _applyEffectToSource() {
+    final s = _source;
+    if (s == null) return;
+    final filters = <FilterType>[
+      FilterType.echoFilter,
+      FilterType.freeverbFilter,
+      FilterType.compressorFilter,
+      FilterType.bassboostFilter,
+      FilterType.flangerFilter,
+    ];
+    for (final f in filters) {
+      try { s.removeFilter(f); } catch (_) {}
+    }
+    try {
+      switch (effect) {
+        case 'Reverb': s.addFilter(FilterType.freeverbFilter); break;
+        case 'Echo': s.addFilter(FilterType.echoFilter); break;
+        case 'Studio':
+          s.addFilter(FilterType.compressorFilter);
+          s.addFilter(FilterType.bassboostFilter);
+          break;
+        case 'Karaoke':
+          s.addFilter(FilterType.compressorFilter);
+          break;
+        case 'Concert':
+          s.addFilter(FilterType.freeverbFilter);
+          s.addFilter(FilterType.flangerFilter);
+          break;
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _chooseEffect(String next) async {
+    setState(() => effect = next);
+    final wasPlaying = play;
+    if (wasPlaying && _handle != null) {
+      await _soloud.stop(_handle!);
+      _handle = null;
+      setState(() => play = false);
+    }
+    _applyEffectToSource();
+    if (wasPlaying) await _startTrack();
+  }
+
+  Future<void> _startTrack() async {
+    if (_source == null) return;
+    _handle = _soloud.play(_source!, volume: 1.0);
+    if (mounted) setState(() => play = true);
+  }
 
   Future<void> _togglePlay() async {
     try {
-      if (play) {
-        await _audio.pause();
+      if (_handle == null) {
+        await _startTrack();
       } else {
-        final source = widget.song.audioUrl.startsWith('/')
-            ? DeviceFileSource(widget.song.audioUrl)
-            : UrlSource(widget.song.audioUrl);
-        await _audio.play(source);
-      }
-      if (mounted) {
-        setState(() => play = !play);
+        _soloud.pauseSwitch(_handle!);
+        if (mounted) setState(() => play = !play);
       }
     } catch (e) {
       if (!mounted) return;
@@ -204,11 +297,51 @@ class _PlayerState extends State<PlayerPage> {
     }
   }
 
+  Future<void> _toggleMic() async {
+    try {
+      if (mic) {
+        _recorder.setLoopback(enable: false);
+        _recorder.stop();
+        setState(() => mic = false);
+      } else {
+        if (!_recorder.isInitialized) {
+          await _recorder.init(
+            androidInputPreset: AndroidInputPreset.voiceCommunication,
+          );
+          _recorder.filters.echoCancellationFilter.activate();
+        }
+        _recorder.setLoopback(enable: true);
+        _recorder.start();
+        setState(() => mic = true);
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Microphone failed: $e')),
+      );
+    }
+  }
+
+  @override
+  void initState() { super.initState(); _initAudio(); }
+
   @override
   void dispose() {
-    _audio.dispose();
+    try { _recorder.setLoopback(enable: false); _recorder.stop(); _recorder.deinit(); } catch (_) {}
+    if (_handle != null) { _soloud.stop(_handle!); }
+    if (_source != null) { _soloud.disposeSource(_source!); }
+    _soloud.deinit();
     super.dispose();
   }
+
+  Widget _effectChip(String name) => ChoiceChip(
+    label: Text(name),
+    selected: effect == name,
+    onSelected: (_) => _chooseEffect(name),
+    selectedColor: const Color(0xFFFF39C7),
+    backgroundColor: Colors.white10,
+    labelStyle: TextStyle(color: effect == name ? Colors.white : Colors.white70, fontWeight: FontWeight.w700),
+  );
 
   @override
   Widget build(BuildContext context) => ListView(
@@ -216,86 +349,41 @@ class _PlayerState extends State<PlayerPage> {
     children: [
       const Text('Now singing', style: TextStyle(color: Colors.white60)),
       const SizedBox(height: 7),
-      Text(widget.song.title,
-          style: const TextStyle(fontSize: 27, fontWeight: FontWeight.w900)),
-      Text(widget.song.artist,
-          style: const TextStyle(color: Colors.white54)),
+      Text(widget.song.title, style: const TextStyle(fontSize: 27, fontWeight: FontWeight.w900)),
+      Text(widget.song.artist, style: const TextStyle(color: Colors.white54)),
       const SizedBox(height: 25),
       Container(
         height: 245,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(32),
-          gradient: const LinearGradient(
-            colors: [Color(0xFF9A2CFF), Color(0xFFE82BC4), Color(0xFF264CFF)],
-          ),
-          boxShadow: const [
-            BoxShadow(color: Color(0x55FF35C8), blurRadius: 35)
-          ],
+          gradient: const LinearGradient(colors: [Color(0xFF9A2CFF), Color(0xFFE82BC4), Color(0xFF264CFF)]),
+          boxShadow: const [BoxShadow(color: Color(0x55FF35C8), blurRadius: 35)],
         ),
-        child: const Center(
-          child: Icon(Icons.mic_rounded, size: 105, color: Colors.white24),
-        ),
+        child: Center(child: Icon(mic ? Icons.mic_rounded : Icons.mic_none_rounded, size: 105, color: Colors.white24)),
       ),
-      const SizedBox(height: 24),
-      Glass(
-        child: Column(
-          children: [
-            const Text('♪  Sing along with the lyrics  ♪',
-                style: TextStyle(color: Colors.white70)),
-            const SizedBox(height: 18),
-            const Text('Feel the music',
-                style: TextStyle(fontSize: 23, fontWeight: FontWeight.w800)),
-            const SizedBox(height: 8),
-            const Text('Let your voice shine tonight',
-                style: TextStyle(color: Color(0xFFFF75DD))),
-            const SizedBox(height: 12),
-            Slider(
-              value: value,
-              onChanged: (v) => setState(() => value = v),
-              activeColor: const Color(0xFFFF45CF),
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                IconButton(
-                  onPressed: () {},
-                  icon: const Icon(Icons.skip_previous_rounded),
-                ),
-                Container(
-                  width: 62,
-                  height: 62,
-                  decoration: const BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: LinearGradient(
-                      colors: [Color(0xFFFF39C7), Color(0xFF7146FF)],
-                    ),
-                  ),
-                  child: IconButton(
-                    onPressed: _togglePlay,
-                    icon: Icon(
-                      play ? Icons.pause_rounded : Icons.play_arrow_rounded,
-                      size: 32,
-                    ),
-                  ),
-                ),
-                IconButton(
-                  onPressed: () {},
-                  icon: const Icon(Icons.skip_next_rounded),
-                ),
-                IconButton(
-                  onPressed: () => setState(() => like = !like),
-                  icon: Icon(
-                    like
-                        ? Icons.favorite_rounded
-                        : Icons.favorite_border_rounded,
-                    color: like ? const Color(0xFFFF4ED2) : null,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
+      const SizedBox(height: 18),
+      Glass(child: Column(children: [
+        Row(children: [
+          Expanded(child: Text(mic ? 'Mic ON • Sing with the track' : 'Mic OFF • Track only', style: const TextStyle(fontWeight: FontWeight.w700))),
+          IconButton(onPressed: _toggleMic, icon: Icon(mic ? Icons.mic_rounded : Icons.mic_off_rounded, color: mic ? const Color(0xFFFF59D5) : Colors.white54)),
+        ]),
+        const SizedBox(height: 6),
+        const Align(alignment: Alignment.centerLeft, child: Text('Voice effects', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800))),
+        const SizedBox(height: 10),
+        Wrap(spacing: 8, runSpacing: 8, children: effects.map(_effectChip).toList()),
+        const SizedBox(height: 14),
+        Text('Effect: $effect', style: const TextStyle(color: Color(0xFFFF75DD), fontWeight: FontWeight.w700)),
+        const SizedBox(height: 8),
+        Slider(value: value, onChanged: (v) => setState(() => value = v), activeColor: const Color(0xFFFF45CF)),
+        Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+          IconButton(onPressed: () {}, icon: const Icon(Icons.skip_previous_rounded)),
+          Container(width: 62, height: 62, decoration: const BoxDecoration(shape: BoxShape.circle, gradient: LinearGradient(colors: [Color(0xFFFF39C7), Color(0xFF7146FF)])), child: IconButton(onPressed: _togglePlay, icon: Icon(play ? Icons.pause_rounded : Icons.play_arrow_rounded, size: 32))),
+          IconButton(onPressed: () {}, icon: const Icon(Icons.skip_next_rounded)),
+          IconButton(onPressed: () => setState(() => like = !like), icon: Icon(like ? Icons.favorite_rounded : Icons.favorite_border_rounded, color: like ? const Color(0xFFFF4ED2) : null)),
+        ]),
+      ])),
+      const SizedBox(height: 10),
+      const Text('Tip: headphones are recommended for mic monitoring to reduce feedback.', style: TextStyle(color: Colors.white38, fontSize: 12)),
     ],
   );
 }
