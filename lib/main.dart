@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
+import 'package:flutter_recorder/flutter_recorder.dart';
+import 'package:flutter_soloud/flutter_soloud.dart';
 import 'package:file_picker/file_picker.dart';
 
 void main() => runApp(const KaraokeApp());
